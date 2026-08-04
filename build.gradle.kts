@@ -1,3 +1,6 @@
+import org.gradle.api.plugins.JavaPluginExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+
 plugins {
     kotlin("jvm") version "2.3.21"
     kotlin("plugin.spring") version "2.3.21"
@@ -10,9 +13,9 @@ group = "org.walnut"
 version = "0.0.1-SNAPSHOT"
 description = "playground"
 
-java {
+extensions.configure<JavaPluginExtension> {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -21,17 +24,18 @@ repositories {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    runtimeOnly("com.h2database:h2")
-    implementation("org.jetbrains.kotlin:kotlin-reflect")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation(kotlin("stdlib"))
+    add("implementation", "org.springframework.boot:spring-boot-starter")
+    add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
+    add("runtimeOnly", "com.h2database:h2")
+    add("implementation", "org.jetbrains.kotlin:kotlin-reflect")
+    add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
+    add("testImplementation", "org.jetbrains.kotlin:kotlin-test-junit5")
+    add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
+    add("implementation", kotlin("stdlib"))
 }
 
-kotlin {
+extensions.configure<KotlinJvmProjectExtension> {
+    jvmToolchain(25)
     compilerOptions {
         freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
     }
