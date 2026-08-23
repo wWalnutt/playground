@@ -28,10 +28,13 @@ dependencies {
     add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
     add("runtimeOnly", "com.h2database:h2")
     add("implementation", "org.jetbrains.kotlin:kotlin-reflect")
+    add("implementation", kotlin("stdlib"))
+    add("implementation", "org.springframework.kafka:spring-kafka:3.3.16")
+
     add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
     add("testImplementation", "org.jetbrains.kotlin:kotlin-test-junit5")
     add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher")
-    add("implementation", kotlin("stdlib"))
+    add("testImplementation", "org.springframework.kafka:spring-kafka-test")
 }
 
 extensions.configure<KotlinJvmProjectExtension> {
