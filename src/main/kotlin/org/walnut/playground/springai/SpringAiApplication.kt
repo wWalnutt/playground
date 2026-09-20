@@ -1,11 +1,13 @@
-package org.walnut.playground
+package org.walnut.playground.springai
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class PlaygroundApplication
+class SpringAiApplication
 
 fun main(args: Array<String>) {
-    runApplication<PlaygroundApplication>(*args)
+    runApplication<SpringAiApplication>(*args) {
+        setAdditionalProfiles("springai")
+    }
 }

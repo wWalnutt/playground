@@ -99,7 +99,7 @@ open class MergedService {
     }
 }
 
-fun main() {
+fun runAsyncSelfInvocationDemo() {
     val ctx = AnnotationConfigApplicationContext(AsyncSelfInvocationConfig::class.java)
     val coordinator = ctx.getBean(CoordinatorService::class.java)
     val merged = ctx.getBean(MergedService::class.java)

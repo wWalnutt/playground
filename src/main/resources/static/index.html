@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>DeepSeek 聊天</title>
+  <link rel="stylesheet" href="/chat.css">
+  <script src="/chat.js" defer></script>
+</head>
+<body>
+  <main class="window">
+    <aside class="sidebar" aria-label="当前会话">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">聊</span> AI 聊天</div>
+      <div class="conversation" aria-current="true">
+        <div class="avatar assistant-avatar" aria-hidden="true">D</div>
+        <div><strong>DeepSeek</strong><p>你的 AI 助手</p></div>
+      </div>
+      <p class="sidebar-note">Spring AI · DeepSeek<br>让想法从一句话开始</p>
+    </aside>
+
+    <section class="chat-panel" aria-label="与 DeepSeek 对话">
+      <header class="chat-header">
+        <div><h1>DeepSeek</h1><p>有什么想聊的，尽管说</p></div>
+        <span class="model-tag">AI 助手</span>
+      </header>
+
+      <div class="messages" id="messages" role="log" aria-label="聊天消息" aria-live="polite"
+           aria-relevant="additions text" tabindex="0">
+        <p class="conversation-note">当前为单轮对话：历史消息仅供查看，不会发送给模型。刷新页面后清空。</p>
+        <article class="message assistant">
+          <div class="avatar assistant-avatar" aria-hidden="true">D</div>
+          <div class="message-body">
+            <span class="message-label">DeepSeek</span>
+            <div class="bubble">你好！我是 DeepSeek。你可以向我提问、让我帮你写代码，或者随便聊聊。</div>
+          </div>
+        </article>
+      </div>
+
+      <form id="chat-form" class="composer">
+        <label for="message-input">发送消息</label>
+        <textarea id="message-input" name="message" rows="3"
+                  placeholder="输入你想说的话…" aria-describedby="input-hint" required></textarea>
+        <div class="composer-footer">
+          <span id="input-hint">Enter 发送，Shift + Enter 换行</span>
+          <span id="request-status" role="status" aria-live="polite"></span>
+          <button id="send-button" type="submit" disabled>发送</button>
+        </div>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

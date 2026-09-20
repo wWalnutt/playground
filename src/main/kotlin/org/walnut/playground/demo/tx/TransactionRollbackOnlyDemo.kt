@@ -199,7 +199,7 @@ open class TxDemoConfig {
     ): NotificationService = NotificationService(dealRepository, metricsService)
 }
 
-fun main() {
+fun runTransactionRollbackOnlyDemo() {
     val ctx = AnnotationConfigApplicationContext(TxDemoConfig::class.java)
     val notificationService = ctx.getBean(NotificationService::class.java)
     val dealRepository = ctx.getBean(DealRepository::class.java)

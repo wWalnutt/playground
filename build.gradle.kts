@@ -23,13 +23,25 @@ repositories {
     mavenCentral()
 }
 
+extra["springAiVersion"] = "2.0.1"
+
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.ai:spring-ai-bom:${property("springAiVersion")}")
+    }
+}
+
 dependencies {
     add("implementation", "org.springframework.boot:spring-boot-starter")
+    add("implementation", "org.springframework.boot:spring-boot-starter-web")
     add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
     add("runtimeOnly", "com.h2database:h2")
     add("implementation", "org.jetbrains.kotlin:kotlin-reflect")
     add("implementation", kotlin("stdlib"))
     add("implementation", "org.springframework.kafka:spring-kafka:3.3.16")
+
+    // Spring AI DeepSeek chat
+    add("implementation", "org.springframework.ai:spring-ai-starter-model-deepseek")
 
     add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
     add("testImplementation", "org.jetbrains.kotlin:kotlin-test-junit5")

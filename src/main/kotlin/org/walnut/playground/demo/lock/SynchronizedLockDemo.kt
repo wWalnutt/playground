@@ -32,7 +32,7 @@ class SynchronizedLockDemo {
     }
 }
 
-fun main() {
+fun runSynchronizedLockDemo() {
     val counter = SynchronizedLockDemo.Counter()
 
     val t1 = thread(name = "T-increment") {

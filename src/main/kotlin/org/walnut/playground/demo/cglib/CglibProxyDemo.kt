@@ -59,7 +59,7 @@ class LoggingInterceptor : MethodInterceptor {
     }
 }
 
-fun main() {
+fun runCglibProxyDemo() {
     // 让 CGLIB 把生成的代理类字节码 dump 到磁盘，便于反编译查看真实结构
     val dumpDir = "build/cglib-generated"
     java.io.File(dumpDir).mkdirs()
