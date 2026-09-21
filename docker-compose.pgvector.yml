@@ -1,0 +1,26 @@
+services:
+  pgvector:
+    image: pgvector/pgvector:0.8.0-pg16
+    ports:
+      - "127.0.0.1:${PGVECTOR_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${PGVECTOR_DB:-knowledge}
+      POSTGRES_USER: ${PGVECTOR_USER:-knowledge}
+      POSTGRES_PASSWORD: ${PGVECTOR_PASSWORD:?Set PGVECTOR_PASSWORD before starting PostgreSQL}
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+      - ./docker/pgvector/init.sql:/docker-entrypoint-initdb.d/01-pgvector.sql:ro
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" &&
+          psql -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" -tAc
+          "SELECT 1 FROM pg_extension WHERE extname = 'vector'" | grep -qx 1
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+volumes:
+  pgvector_data:
