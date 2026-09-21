@@ -3,6 +3,66 @@ a new project for learn
 
 ## 启动命令速查
 
+### tmuxinator 一键启动（推荐）
+
+先启动 Docker Desktop，并在当前终端设置 `DEEPSEEK_API_KEY`。
+数据库密码继续从项目根目录 `.env` 读取。停止 IDEA 或其他终端中占用
+`8080` 的应用，再执行：
+
+```bash
+./run standalone_tmux
+```
+
+与 customer-order 项目使用相同的方式：`./run standalone_tmux` 转发到
+`tooling/runcommands/run_standalone_tmux.sh`，入口脚本调用
+`tmuxinator start -p .tmuxinator_default.yml`，缺少 tmuxinator 时通过 Homebrew 安装。
+首次创建会话前启动 PostgreSQL 和 Ollama，等待健康检查通过并确认 `bge-m3` 可用。
+会话名为 `playground-ai`，只有一个 `main` 窗口，内部平铺五个 pane：
+
+| Pane | 用途 |
+| --- | --- |
+| `backend` | 运行带 `vectors` 配置的 Spring Boot，显示应用日志 |
+| `pgvector` | 查看 PostgreSQL / pgvector 容器日志 |
+| `ollama` | 查看 Ollama / bge-m3 容器日志 |
+| `shell` | 项目根目录的普通终端，可执行 curl 等命令 |
+| `control` | 输入 `1` 并确认 `y` 关闭当前项目会话；输入 `2` 暂时离开 |
+
+应用启动成功后访问 <http://localhost:8080/>。命令退出后保留 pane 和终端，
+便于查看错误输出或重新执行。重复执行入口会进入已有会话，不会重复启动应用。
+启动脚本直接使用本机的 `docker-compose`。控制菜单使用 Bash，不依赖额外菜单工具。
+
+鼠标点击切换 pane，也可以 `Ctrl+b` 后按方向键。
+`Ctrl+b` 后按 `z` 放大/还原当前 pane，按 `d` 暂时离开会话（应用继续运行）。
+也可以只在后台创建会话：
+
+```bash
+./run standalone_tmux --no-attach
+```
+
+重新连接：
+
+```bash
+tmux attach-session -t playground-ai
+```
+
+布局在 `.tmuxinator_default.yml` 中，鼠标和 pane 标题配置在
+`tooling/local-standalone/tmux.conf` 中，沿用默认 tmux server。
+若 tmux server 早于环境变量启动，建议将 `DEEPSEEK_API_KEY` 设置在本地
+`.env` 中（`vectors` 配置会读取，不提交 Git），然后重启 backend。
+在已有 tmux 中可使用 `--no-attach` 创建会话，再切换到该会话。
+
+可以在 `control` pane 输入 `1`，再输入 `y` 确认关闭当前项目会话和应用，
+不会关闭其他 tmux 会话。输入 `2` 只离开会话，应用继续运行。
+也可以先在 `backend` pane 按 `Ctrl+C`，然后在普通终端执行：
+
+```bash
+tmux kill-session -t playground-ai
+docker-compose -f docker-compose.pgvector.yml --profile embedding down
+```
+
+结束 tmux 会话不会自动停止 Docker 容器。停止容器时不要加 `-v`，
+以保留数据库和模型文件。下面保留手动启动步骤供排查和首次配置使用。
+
 以下命令都在项目根目录执行。使用本机的 `docker-compose`；如果安装的是
 Docker Compose 插件，可替换为 `docker compose`。
 

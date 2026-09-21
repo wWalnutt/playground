@@ -1,0 +1,24 @@
+name: playground-ai
+root: .
+
+tmux_options: -f tooling/local-standalone/tmux.conf
+on_project_first_start: bash tooling/local-standalone/start_dependencies.sh || exit $?
+
+windows:
+  - main:
+      layout: tiled
+      panes:
+        - backend:
+            - printf '\033]2;%s\033\\' 'Spring AI backend'
+            - ./gradlew bootRun --args='--spring.profiles.active=vectors' --console=plain
+        - pgvector:
+            - printf '\033]2;%s\033\\' 'PostgreSQL + pgvector'
+            - docker-compose -f docker-compose.pgvector.yml --profile embedding logs --follow --tail 100 pgvector
+        - ollama:
+            - printf '\033]2;%s\033\\' 'Ollama / bge-m3'
+            - docker-compose -f docker-compose.pgvector.yml --profile embedding logs --follow --tail 100 ollama
+        - shell:
+            - printf '\033]2;%s\033\\' 'Project shell'
+        - control:
+            - printf '\033]2;%s\033\\' 'Close / detach tmux'
+            - bash tooling/local-standalone/tmux-menu.sh

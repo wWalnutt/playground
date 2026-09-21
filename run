@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+usage() {
+  printf 'Usage: ./run standalone_tmux [tmuxinator options]\n'
+}
+
+case "${1:-}" in
+  standalone_tmux)
+    shift
+    exec bash "$ROOT/tooling/runcommands/run_standalone_tmux.sh" "$@"
+    ;;
+  -h|--help)
+    usage
+    ;;
+  "")
+    usage >&2
+    exit 1
+    ;;
+  *)
+    printf 'Unknown command: %s\n' "$1" >&2
+    usage >&2
+    exit 1
+    ;;
+esac
