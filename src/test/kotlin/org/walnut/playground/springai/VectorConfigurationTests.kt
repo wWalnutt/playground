@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyList
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
@@ -18,6 +19,8 @@ import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.ai.ollama.OllamaEmbeddingModel
 import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.ai.vectorstore.SearchRequest
+import org.springframework.http.HttpStatus
+import org.springframework.web.server.ResponseStatusException
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
@@ -31,6 +34,8 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.concurrent.atomic.AtomicReference
+import java.util.UUID
+import java.time.Instant
 import tools.jackson.databind.ObjectMapper
 import javax.sql.DataSource
 import kotlin.test.assertEquals
@@ -56,6 +61,9 @@ class VectorConfigurationTests {
     @MockitoBean
     lateinit var vectorStore: VectorStore
 
+    @MockitoBean
+    lateinit var documents: KnowledgeDocumentRepository
+
     @Autowired
     lateinit var context: ApplicationContext
 
@@ -65,6 +73,7 @@ class VectorConfigurationTests {
     @BeforeEach
     fun resetChatCapture() {
         chatRequest.set("")
+        requestBody.set("")
     }
 
     @Test
@@ -82,9 +91,10 @@ class VectorConfigurationTests {
     fun uploadsReferenceFileThroughMultipartEndpoint() {
         var stored = emptyList<Document>()
         doAnswer { invocation ->
-            stored = invocation.getArgument(0)
+            stored = invocation.getArgument(3)
             null
-        }.`when`(vectorStore).add(anyList())
+        }.`when`(documents).index(any(UUID::class.java) ?: UUID(0, 0), anyString(),
+            any(KnowledgeUploadType::class.java) ?: KnowledgeUploadType.TEXT, anyList())
         val text = "差旅报销须在30天内提交。"
         val response = upload("policy.md", text.toByteArray(Charsets.UTF_8))
         assertEquals(200, response.statusCode())
@@ -103,8 +113,73 @@ class VectorConfigurationTests {
         assertEquals(400, upload("policy.txt", byteArrayOf(0xff.toByte())).statusCode())
         assertEquals(400, upload("policy.txt", "a".repeat(20001).toByteArray()).statusCode())
         assertEquals(413, upload("policy.txt", ByteArray(65537) { 65 }).statusCode())
+        verifyNoInteractions(vectorStore, documents)
+        assertEquals("", chatRequest.get())
+    }
+
+    @Test
+    fun listsViewsAndDeletesDocumentsWithoutCallingModels() {
+        val id = UUID.randomUUID()
+        val summary = KnowledgeDocumentSummary(
+            id.toString(), "policy.md", KnowledgeUploadType.FILE, Instant.parse("2026-01-01T00:00:00Z"),
+            1, KnowledgeDocumentStatus.READY,
+        )
+        `when`(documents.list(0, 10)).thenReturn(KnowledgeDocumentPage(listOf(summary), 0, 10, 1, 1))
+        `when`(documents.details(id)).thenReturn(
+            KnowledgeDocumentDetails(summary, listOf(KnowledgeChunk(UUID.randomUUID().toString(), 0, "policy text"))),
+        )
+        val page = managementRequest("")
+        assertEquals(200, page.statusCode())
+        val pageJson = objectMapper.readTree(page.body())
+        assertEquals(1, pageJson["totalElements"].asInt())
+        assertEquals("FILE", pageJson["items"][0]["uploadType"].asString())
+        assertEquals("READY", pageJson["items"][0]["status"].asString())
+        assertEquals("2026-01-01T00:00:00Z", pageJson["items"][0]["uploadedAt"].asString())
+        val detail = managementRequest("/$id")
+        assertEquals(200, detail.statusCode())
+        assertEquals("policy text", objectMapper.readTree(detail.body())["chunks"][0]["text"].asString())
+        val deleted = managementRequest("/$id", "DELETE")
+        assertEquals(204, deleted.statusCode())
+        assertEquals("", deleted.body())
+        verify(documents).delete(id)
         verifyNoInteractions(vectorStore)
         assertEquals("", chatRequest.get())
+        assertEquals("", requestBody.get())
+    }
+
+    @Test
+    fun rejectsMalformedDocumentManagementRequestsBeforeDatabaseAccess() {
+        listOf("?page=-1", "?page=oops", "?size=0", "?size=101", "/bad-id", "/1-1-1-1-1").forEach {
+            assertEquals(400, managementRequest(it).statusCode())
+        }
+        assertEquals(400, managementRequest("/bad-id", "DELETE").statusCode())
+        verifyNoInteractions(documents, vectorStore)
+        assertEquals("", chatRequest.get())
+        assertEquals("", requestBody.get())
+    }
+
+    @Test
+    fun preservesMissingConflictAndDatabaseFailureStatuses() {
+        val missing = UUID.randomUUID()
+        val processing = UUID.randomUUID()
+        `when`(documents.details(missing)).thenThrow(ResponseStatusException(HttpStatus.NOT_FOUND))
+        org.mockito.Mockito.doThrow(ResponseStatusException(HttpStatus.NOT_FOUND)).`when`(documents).delete(missing)
+        org.mockito.Mockito.doThrow(ResponseStatusException(HttpStatus.CONFLICT)).`when`(documents).delete(processing)
+        `when`(documents.list(0, 10)).thenThrow(IllegalStateException("Database unavailable"))
+        assertEquals(404, managementRequest("/$missing").statusCode())
+        assertEquals(404, managementRequest("/$missing", "DELETE").statusCode())
+        assertEquals(409, managementRequest("/$processing", "DELETE").statusCode())
+        assertEquals(500, managementRequest("").statusCode())
+        verifyNoInteractions(vectorStore)
+        assertEquals("", chatRequest.get())
+        assertEquals("", requestBody.get())
+    }
+
+    private fun managementRequest(suffix: String, method: String = "GET"): HttpResponse<String> {
+        val port = context.environment.getRequiredProperty("local.server.port")
+        val request = HttpRequest.newBuilder(URI("http://localhost:$port/api/knowledge/documents$suffix"))
+            .method(method, HttpRequest.BodyPublishers.noBody()).build()
+        return HttpClient.newHttpClient().use { it.send(request, HttpResponse.BodyHandlers.ofString()) }
     }
 
     private fun upload(filename: String, bytes: ByteArray): HttpResponse<String> {

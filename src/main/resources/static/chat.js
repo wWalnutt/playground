@@ -24,13 +24,30 @@ const textInput = document.querySelector("#document-text");
 const textUploadButton = document.querySelector("#text-upload-button");
 const textUploadStatus = document.querySelector("#text-upload-status");
 const textCount = document.querySelector("#text-count");
+const documentManager = document.querySelector("#document-manager");
+const documentList = document.querySelector("#document-list");
+const documentsStatus = document.querySelector("#documents-status");
+const documentsRefresh = document.querySelector("#documents-refresh");
+const documentsPrevious = document.querySelector("#documents-previous");
+const documentsNext = document.querySelector("#documents-next");
+const documentsPageLabel = document.querySelector("#documents-page");
+const documentDetail = document.querySelector("#document-detail");
+const documentDetailTitle = document.querySelector("#document-detail-title");
+const documentDetailMeta = document.querySelector("#document-detail-meta");
+const documentChunks = document.querySelector("#document-chunks");
+const documentDetailClose = document.querySelector("#document-detail-close");
+const documentStatuses = { PROCESSING: "正在入库", READY: "入库成功", FAILED: "入库失败", LEGACY: "历史文档（完整性未知）" };
+const uploadTypes = { TEXT: "直接输入", FILE: "文件上传", LEGACY: "历史导入" };
 const drafts = { chat: "", rag: "" };
 let activeView = "chat";
 let sending = false;
 let uploading = "";
+let managing = false;
+let documentsPage = 0;
+let documentsTotalPages = 0;
 
 function updateControls() {
-  const busy = sending || uploading !== "";
+  const busy = sending || uploading !== "" || managing;
   sendButton.disabled = busy || activeView === "upload" || !input.value.trim();
   sendButton.textContent = sending ? "等待回复…" : "发送";
   navigation.forEach((button) => { button.disabled = busy; });
@@ -45,6 +62,14 @@ function updateControls() {
   Object.values(messageLists).forEach((messages) => {
     messages.querySelectorAll(".retry-button").forEach((button) => { button.disabled = busy; });
   });
+  documentManager.setAttribute("aria-busy", String(managing));
+  documentsRefresh.disabled = busy;
+  documentsPrevious.disabled = busy || documentsTotalPages === 0 || documentsPage <= 0;
+  documentsNext.disabled = busy || documentsPage + 1 >= documentsTotalPages;
+  documentDetailClose.disabled = busy;
+  documentList.querySelectorAll("button").forEach((button) => {
+    button.disabled = busy || button.dataset.processing === "true";
+  });
 }
 
 function scrollToLatest(mode = activeView) {
@@ -53,7 +78,7 @@ function scrollToLatest(mode = activeView) {
 }
 
 function switchView(view) {
-  if (sending || uploading || view === activeView) return;
+  if (sending || uploading || managing || view === activeView) return;
   if (activeView !== "upload") drafts[activeView] = input.value;
   activeView = view;
   navigation.forEach((button) => {
@@ -67,7 +92,7 @@ function switchView(view) {
   viewDescription.textContent = {
     chat: "直接与 DeepSeek 对话，不检索知识库",
     rag: "先检索参考资料，再根据资料回答",
-    upload: "输入文本或上传文件，构建你的知识库",
+    upload: "添加参考资料，查看和管理知识库文档",
   }[view];
   modeHint.textContent = {
     chat: "普通聊天：直接调用 DeepSeek，不检索知识库。",
@@ -79,6 +104,7 @@ function switchView(view) {
   status.textContent = "";
   updateControls();
   scrollToLatest();
+  if (view === "upload") void refreshDocuments();
 }
 
 function appendMessage(role, text, mode) {
@@ -144,7 +170,7 @@ function renderSources(body, sources) {
 }
 
 async function send(message, mode, failedRow) {
-  if (sending || uploading) return;
+  if (sending || uploading || managing) return;
   sending = true;
   if (failedRow) {
     failedRow.remove();
@@ -222,7 +248,7 @@ form.addEventListener("submit", (event) => {
     input.reportValidity();
     return;
   }
-  if (message && !sending && !uploading) {
+  if (message && !sending && !uploading && !managing) {
     void send(message, activeView);
   }
 });
@@ -238,7 +264,7 @@ input.addEventListener("keydown", (event) => {
   // Do not submit when Enter is used to confirm Chinese IME composition.
   if (event.key === "Enter" && !event.shiftKey && !event.isComposing && event.keyCode !== 229) {
     event.preventDefault();
-    if (!sending && !uploading) form.requestSubmit();
+    if (!sending && !uploading && !managing) form.requestSubmit();
   }
 });
 
@@ -255,7 +281,7 @@ function showUploadError(element, message) {
 
 uploadForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (sending || uploading) return;
+  if (sending || uploading || managing) return;
   const file = fileInput.files[0];
   if (!file) {
     showUploadError(uploadStatus, "请先选择一个文件。");
@@ -280,7 +306,7 @@ uploadForm.addEventListener("submit", (event) => {
 
 textUploadForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  if (sending || uploading) return;
+  if (sending || uploading || managing) return;
   const source = sourceInput.value.trim();
   const text = textInput.value;
   if (!source || source.length > 200 || !text.trim() || text.length > 20000) {
@@ -307,7 +333,7 @@ textUploadForm.addEventListener("submit", (event) => {
 });
 
 async function indexDocument({ kind, title, url, options, output, invalidMessage, onSuccess }) {
-  if (sending || uploading) return;
+  if (sending || uploading || managing) return;
   uploading = kind;
   output.classList.remove("error");
   output.textContent = `正在提交并向量化「${title}」，首次处理可能较慢，请勿重复提交…`;
@@ -328,7 +354,7 @@ async function indexDocument({ kind, title, url, options, output, invalidMessage
         415: "仅支持 TXT 和 Markdown 文件。",
       };
       throw new Error(errors[response.status] ||
-        `入库失败（HTTP ${response.status}），请检查 PostgreSQL、Ollama 和后端日志。可能已有部分数据入库，重新上传前请确认。`);
+        `入库失败（HTTP ${response.status}），请检查 PostgreSQL、Ollama 和后端日志，并刷新下方列表确认文档状态。`);
     }
     const result = await response.json();
     if (typeof result?.documentId !== "string" || !result.documentId ||
@@ -350,6 +376,181 @@ async function indexDocument({ kind, title, url, options, output, invalidMessage
     clearTimeout(timeout);
     uploading = "";
     updateControls();
+    await refreshDocuments(0);
   }
 }
+
+function validDocument(item) {
+  return item && typeof item.documentId === "string" && item.documentId.length > 0 &&
+    typeof item.source === "string" && Object.hasOwn(documentStatuses, item.status) &&
+    Object.hasOwn(uploadTypes, item.uploadType) &&
+    Number.isInteger(item.chunksIndexed) && item.chunksIndexed >= 0 &&
+    (item.uploadedAt === null || (typeof item.uploadedAt === "string" && Number.isFinite(Date.parse(item.uploadedAt))));
+}
+
+function documentMetadata(item) {
+  const uploadedAt = item.uploadedAt === null ? "未知" : new Date(item.uploadedAt).toLocaleString();
+  return `文档 ID：${item.documentId}\n${uploadTypes[item.uploadType]} · ${item.chunksIndexed} 个文本块 · 上传时间：${uploadedAt}`;
+}
+
+async function documentRequest(path, method = "GET") {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+  try {
+    const response = await fetch(`/api/knowledge/documents${path}`, { method, signal: controller.signal });
+    if (!response.ok) {
+      const errors = {
+        400: "文档编号或分页参数无效，请刷新列表。",
+        404: path.startsWith("?")
+          ? "文档管理接口未启用，请用 --spring.profiles.active=vectors 重启后端。"
+          : "文档不存在或接口未启用，请刷新列表并确认 vectors 配置已启用。",
+        409: "文档正在入库，暂时不能删除，请稍后刷新列表。",
+      };
+      throw new Error(errors[response.status] || `文档操作失败（HTTP ${response.status}），请检查数据库和后端日志。`);
+    }
+    if (method === "DELETE") {
+      if (response.status !== 204) throw new Error("删除响应异常，请刷新列表确认结果。");
+      return;
+    }
+    return await response.json();
+  } catch (error) {
+    if (controller.signal.aborted || error instanceof TypeError || error instanceof SyntaxError) {
+      throw new Error(method === "DELETE"
+        ? "连接中断、超时或响应异常，删除结果未确认。请刷新列表，不要重复提交。"
+        : "加载文档失败：连接中断、超时或响应异常。请检查后端后刷新列表。");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function manageDocuments(message, action) {
+  if (sending || uploading || managing) return;
+  managing = true;
+  documentsStatus.classList.remove("error");
+  documentsStatus.textContent = message;
+  updateControls();
+  try {
+    await action();
+  } catch (error) {
+    if (documentsPageLabel.textContent === "加载中…") documentsPageLabel.textContent = "列表未加载";
+    showUploadError(documentsStatus, error instanceof Error ? error.message : "文档操作失败，请刷新列表。");
+  } finally {
+    managing = false;
+    updateControls();
+  }
+}
+
+function renderDocuments(items) {
+  documentList.replaceChildren();
+  items.forEach((item) => {
+    const row = document.createElement("article");
+    row.className = "document-item";
+    const title = document.createElement("h3");
+    title.textContent = item.source;
+    const state = document.createElement("span");
+    state.className = "document-state";
+    state.dataset.status = item.status;
+    state.textContent = documentStatuses[item.status];
+    const metadata = document.createElement("p");
+    metadata.className = "document-meta";
+    metadata.textContent = documentMetadata(item);
+    const actions = document.createElement("div");
+    actions.className = "document-actions";
+    const detail = document.createElement("button");
+    detail.type = "button";
+    detail.className = "document-button";
+    detail.textContent = "查看分块";
+    detail.setAttribute("aria-label", `查看「${item.source}」的分块`);
+    detail.addEventListener("click", () => showDocument(item.documentId));
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "document-button document-delete";
+    remove.dataset.processing = String(item.status === "PROCESSING");
+    remove.textContent = item.status === "PROCESSING" ? "入库中，暂不可删除" : "删除文档";
+    remove.setAttribute("aria-label", `删除「${item.source}」`);
+    remove.addEventListener("click", () => deleteDocument(item));
+    actions.append(detail, remove);
+    row.append(title, state, metadata, actions);
+    documentList.append(row);
+  });
+}
+
+async function loadDocumentPage(page) {
+  documentDetail.hidden = true;
+  documentList.replaceChildren();
+  documentsPageLabel.textContent = "加载中…";
+  documentsTotalPages = 0;
+  const result = await documentRequest(`?page=${page}&size=10`);
+  if (!result || !Array.isArray(result.items) || !result.items.every(validDocument) ||
+      result.page !== page || result.size !== 10 ||
+      !Number.isSafeInteger(result.totalElements) || result.totalElements < 0 ||
+      !Number.isInteger(result.totalPages) || result.totalPages !== Math.ceil(result.totalElements / result.size)) {
+    throw new Error("服务返回的文档列表格式不正确，请刷新重试。");
+  }
+  if (page > 0 && page >= result.totalPages) {
+    return loadDocumentPage(Math.max(0, result.totalPages - 1));
+  }
+  documentsPage = result.page;
+  documentsTotalPages = result.totalPages;
+  renderDocuments(result.items);
+  documentsPageLabel.textContent = `第 ${result.totalPages === 0 ? 0 : result.page + 1} / ${result.totalPages} 页 · 共 ${result.totalElements} 篇`;
+  documentsStatus.textContent = result.totalElements === 0 ? "知识库暂无文档，请先添加参考资料。" : "列表已更新。";
+}
+
+function refreshDocuments(page = documentsPage) {
+  return manageDocuments("正在加载文档列表…", () => loadDocumentPage(page));
+}
+
+function showDocument(documentId) {
+  return manageDocuments("正在加载文档详情…", async () => {
+    documentDetail.hidden = true;
+    const result = await documentRequest(`/${encodeURIComponent(documentId)}`);
+    if (!validDocument(result?.document) || result.document.documentId !== documentId ||
+        !Array.isArray(result.chunks) || !result.chunks.every((chunk) =>
+          chunk && typeof chunk.id === "string" && typeof chunk.text === "string" &&
+          Number.isInteger(chunk.chunkIndex) && chunk.chunkIndex >= 0)) {
+      throw new Error("服务返回的文档详情格式不正确，请刷新重试。");
+    }
+    documentDetailTitle.textContent = result.document.source;
+    documentDetailMeta.textContent = `${documentStatuses[result.document.status]} · ${documentMetadata(result.document)}`;
+    documentChunks.replaceChildren();
+    result.chunks.forEach((chunk) => {
+      const block = document.createElement("details");
+      block.className = "document-chunk";
+      const summary = document.createElement("summary");
+      summary.textContent = `分块 ${chunk.chunkIndex + 1} · ${chunk.id}`;
+      const text = document.createElement("p");
+      text.className = "source-text";
+      text.textContent = chunk.text;
+      block.append(summary, text);
+      documentChunks.append(block);
+    });
+    if (!result.chunks.length) documentChunks.textContent = "当前没有已入库的文本块。";
+    documentDetail.hidden = false;
+    documentsStatus.textContent = "详情已加载。点击分块标题查看原文。";
+    documentDetail.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+}
+
+function deleteDocument(item) {
+  if (sending || uploading || managing) return;
+  if (!window.confirm(`确定删除「${item.source}」？\n文档 ID：${item.documentId}\n将永久移除该文档及其全部向量，所有使用者的后续 RAG 检索都将不再使用这份资料。`)) return;
+  return manageDocuments("正在删除文档…", async () => {
+    await documentRequest(`/${encodeURIComponent(item.documentId)}`, "DELETE");
+    // Keep deletion success separate from a possibly failing list refresh.
+    try {
+      await loadDocumentPage(documentsPage);
+      documentsStatus.textContent = `「${item.source}」已删除。`;
+    } catch (error) {
+      throw new Error(`「${item.source}」已删除，但列表刷新失败。${error instanceof Error ? error.message : "请手动刷新。"}`);
+    }
+  });
+}
+
+documentsRefresh.addEventListener("click", () => refreshDocuments());
+documentsPrevious.addEventListener("click", () => refreshDocuments(Math.max(0, documentsPage - 1)));
+documentsNext.addEventListener("click", () => refreshDocuments(documentsPage + 1));
+documentDetailClose.addEventListener("click", () => { documentDetail.hidden = true; });
 updateControls();

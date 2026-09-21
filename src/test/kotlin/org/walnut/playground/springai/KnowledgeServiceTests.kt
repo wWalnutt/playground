@@ -10,11 +10,14 @@ import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyList
+import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
+import java.util.UUID
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -22,7 +25,8 @@ import kotlin.test.assertTrue
 class KnowledgeServiceTests {
     private val embeddingModel = mock(EmbeddingModel::class.java)
     private val vectorStore = mock(VectorStore::class.java)
-    private val service = KnowledgeService(embeddingModel, vectorStore)
+    private val documents = mock(KnowledgeDocumentRepository::class.java)
+    private val service = KnowledgeService(embeddingModel, vectorStore, documents)
 
     @Test
     fun embedsUsingBgeDimensions() {
@@ -44,9 +48,10 @@ class KnowledgeServiceTests {
     fun splitsTextAndPreservesSourceMetadata() {
         var stored = emptyList<Document>()
         doAnswer { invocation ->
-            stored = invocation.getArgument(0)
+            stored = invocation.getArgument(3)
             null
-        }.`when`(vectorStore).add(anyList())
+        }.`when`(documents).index(any(UUID::class.java) ?: UUID(0, 0), anyString(),
+            any(KnowledgeUploadType::class.java) ?: KnowledgeUploadType.TEXT, anyList())
         val result = service.ingest(
             KnowledgeDocumentRequest("Travel expenses must be submitted within 30 days. ".repeat(200), "policy"),
         )
@@ -65,9 +70,11 @@ class KnowledgeServiceTests {
     fun keepsShortText() {
         var stored = emptyList<Document>()
         doAnswer { invocation ->
-            stored = invocation.getArgument(0)
+            stored = invocation.getArgument(3)
+            assertEquals(KnowledgeUploadType.TEXT, invocation.getArgument(2))
             null
-        }.`when`(vectorStore).add(anyList())
+        }.`when`(documents).index(any(UUID::class.java) ?: UUID(0, 0), anyString(),
+            any(KnowledgeUploadType::class.java) ?: KnowledgeUploadType.TEXT, anyList())
         assertEquals(1, service.ingest(KnowledgeDocumentRequest("Hi")).chunksIndexed)
         assertEquals("Hi", stored.single().text)
     }
@@ -76,9 +83,11 @@ class KnowledgeServiceTests {
     fun acceptsUtf8FilesAndPreservesCleanFilename() {
         var stored = emptyList<Document>()
         doAnswer { invocation ->
-            stored = invocation.getArgument(0)
+            stored = invocation.getArgument(3)
+            assertEquals(KnowledgeUploadType.FILE, invocation.getArgument(2))
             null
-        }.`when`(vectorStore).add(anyList())
+        }.`when`(documents).index(any(UUID::class.java) ?: UUID(0, 0), anyString(),
+            any(KnowledgeUploadType::class.java) ?: KnowledgeUploadType.TEXT, anyList())
         val text = "差旅报销须在30天内提交。"
         listOf("policy.txt", "policy.MD", "policy.markdown").forEach { filename ->
             val file = MockMultipartFile("file", "C:\\fakepath\\$filename", "application/octet-stream",
@@ -110,7 +119,7 @@ class KnowledgeServiceTests {
             }
             assertEquals(expectedStatus, error.statusCode)
         }
-        verifyNoInteractions(embeddingModel, vectorStore)
+        verifyNoInteractions(embeddingModel, vectorStore, documents)
     }
 
     @Test
@@ -134,11 +143,16 @@ class KnowledgeServiceTests {
             { service.search(KnowledgeSearchRequest("")) },
             { service.search(KnowledgeSearchRequest("question", 0)) },
             { service.search(KnowledgeSearchRequest("question", 21)) },
+            { service.listDocuments(-1, 10) },
+            { service.listDocuments(0, 0) },
+            { service.listDocuments(0, 101) },
+            { service.documentDetails("1-1-1-1-1") },
+            { service.deleteDocument("not-a-uuid") },
         )
         invalidRequests.forEach { request ->
             val error = assertFailsWith<ResponseStatusException> { request() }
             assertEquals(HttpStatus.BAD_REQUEST, error.statusCode)
         }
-        verifyNoInteractions(embeddingModel, vectorStore)
+        verifyNoInteractions(embeddingModel, vectorStore, documents)
     }
 }

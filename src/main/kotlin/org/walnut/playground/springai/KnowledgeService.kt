@@ -20,6 +20,7 @@ import java.util.UUID
 class KnowledgeService(
     private val embeddingModel: EmbeddingModel,
     private val vectorStore: VectorStore,
+    private val documents: KnowledgeDocumentRepository,
 ) {
     private val splitter = TokenTextSplitter.builder()
         .withChunkSize(500)
@@ -35,7 +36,10 @@ class KnowledgeService(
         return EmbeddingResponse("bge-m3", vector.size, vector.toList())
     }
 
-    fun ingest(request: KnowledgeDocumentRequest): KnowledgeDocumentResponse {
+    fun ingest(request: KnowledgeDocumentRequest): KnowledgeDocumentResponse =
+        ingest(request, KnowledgeUploadType.TEXT)
+
+    private fun ingest(request: KnowledgeDocumentRequest, uploadType: KnowledgeUploadType): KnowledgeDocumentResponse {
         validateText(request.text, 20000)
         if (request.source.isBlank() || request.source.length > 200) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "source must contain 1 to 200 characters")
@@ -48,7 +52,7 @@ class KnowledgeService(
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text contains no indexable content")
         }
         chunks.forEachIndexed { index, chunk -> chunk.metadata["chunkIndex"] = index }
-        vectorStore.add(chunks)
+        documents.index(UUID.fromString(documentId), request.source, uploadType, chunks)
         return KnowledgeDocumentResponse(documentId, chunks.size)
     }
 
@@ -75,7 +79,25 @@ class KnowledgeService(
         if (text.any { it.isISOControl() && it !in "\n\r\t" }) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "File must contain plain text, not binary data")
         }
-        return ingest(KnowledgeDocumentRequest(text, filename))
+        return ingest(KnowledgeDocumentRequest(text, filename), KnowledgeUploadType.FILE)
+    }
+
+    fun listDocuments(page: Int, size: Int): KnowledgeDocumentPage {
+        if (page < 0 || size !in 1..100) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be non-negative and size must be between 1 and 100")
+        }
+        return documents.list(page, size)
+    }
+
+    fun documentDetails(documentId: String): KnowledgeDocumentDetails = documents.details(parseDocumentId(documentId))
+
+    fun deleteDocument(documentId: String) = documents.delete(parseDocumentId(documentId))
+
+    private fun parseDocumentId(value: String): UUID {
+        if (!value.matches(Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"))) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "documentId must be a UUID")
+        }
+        return UUID.fromString(value)
     }
 
     fun search(request: KnowledgeSearchRequest): List<KnowledgeMatch> {

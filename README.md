@@ -108,6 +108,7 @@ docker-compose -f docker-compose.pgvector.yml --profile embedding up -d --wait
 和“上传参考文档”三个入口，手机端显示为顶部导航。
 正常对话直接调用 DeepSeek；RAG 先检索知识库，并在回复下方展示可展开的来源。
 上传页支持直接输入资料名称和正文，也支持选择 TXT/Markdown 文件。
+页面下方的“知识库文档”支持分页浏览、查看分块原文和确认删除；上传后自动刷新列表。
 
 如果只需要 DeepSeek 聊天，不需要数据库和 Ollama：
 
@@ -300,11 +301,63 @@ It records the basename as `metadata.source` and returns `documentId` plus
 `chunksIndexed`. Only extracted text chunks, vectors, and metadata are retained
 in the database, not a downloadable copy of the original file.
 The knowledge base is shared across conversations and persists after refresh.
-No deduplication or automatic upload retry is performed. If a request times out
-or fails mid-indexing, inspect the database/backend logs before resubmitting:
-the server may have written some or all of the data.
+No deduplication or automatic upload retry is performed. If a request times out,
+the server may still be indexing or may already have finished. Refresh the
+document list and check its status before resubmitting.
 Ingestion is local; subsequent RAG requests send relevant passages to DeepSeek,
 so upload only documents permitted to be shared with that service.
+
+### 知识库文档管理
+
+在“上传参考文档”页面下方查看文档列表，每页 10 篇，展示名称、文档 ID、
+上传方式、上传时间、分块数量和入库状态。进入页面、上传完成或删除后会刷新列表，
+也可以点击“刷新列表”查看其他客户端上传的资料或仍在处理的任务。
+“查看分块”展示实际保存的文本块；内容仅按纯文本显示，不执行 HTML 或 Markdown。
+
+| 方法 | 接口 | 用途 |
+| --- | --- | --- |
+| `GET` | `/api/knowledge/documents?page=0&size=10` | 分页列表，页码从 0 开始 |
+| `GET` | `/api/knowledge/documents/{documentId}` | 文档信息和按序排列的分块 |
+| `DELETE` | `/api/knowledge/documents/{documentId}` | 删除文档及全部对应向量，成功返回 204 |
+
+`size` 默认为 10，允许 1–100；`page` 必须是非负整数。
+列表响应包含 `items`、`page`、`size`、`totalElements`、`totalPages`。
+每个文档包含 `documentId`、`source`、`uploadType`、`uploadedAt`、
+`chunksIndexed`、`status`；详情响应为 `{document, chunks}`，
+每个分块包含 `id`、`chunkIndex`（从 0 开始）、`text`。
+
+状态分别为 `PROCESSING`（正在入库）、`READY`（成功）、`FAILED`（失败）、
+`LEGACY`（历史文档，无法确认原始入库完整性）。
+上传方式为 `TEXT`、`FILE` 或 `LEGACY`。历史记录无法还原上传时间，
+因此 `uploadedAt` 为 `null`，页面显示“未知”，不会用迁移时间代替。
+
+启用 `vectors` 后，应用自动创建 `public.bge_m3_documents_management` 管理表，
+并根据现有向量元数据补齐历史文档记录，重复启动不会重复导入。
+表名跟随配置的向量表，格式为 `<向量表名>_management`，使用同一 schema。
+分块数量从实际向量记录统计，避免管理记录与实际入库数量不一致。
+
+入库开始时先保存 `PROCESSING`；全部向量写入与 `READY` 状态在同一事务提交。
+失败时回滚本次向量写入，保留 `FAILED` 记录并返回错误。
+应用启动或读取列表、详情时会识别中断的任务并标记失败；
+跨实例数据库锁保护仍在执行的入库任务，不会将其误判为失败。
+该事务流程要求数据库连接池至少有 2 个连接（默认 Hikari 配置满足）。
+
+删除前页面要求确认。删除影响共享知识库中的这份文档及其全部分块，
+不会删除其他同名文档，也不会清除已有聊天记录；已发出的 RAG 请求可能仍持有检索结果。
+正在入库的文档不能删除（409），不存在的文档返回 404，非法参数返回 400。
+删除失败或连接中断时应先刷新列表确认状态，而不是盲目重试。
+
+这些管理接口仅在 `vectors` 配置启用时可用，只访问 PostgreSQL，
+不会调用 DeepSeek 或 Ollama。不保存原文件，不提供原文件下载、在线编辑或自动去重。
+当前知识库没有用户隔离和鉴权，仅适用于可信的本地环境。
+
+仓库的 PostgreSQL 集成测试默认跳过。设置 `KNOWLEDGE_TEST_POSTGRES=true`、
+`KNOWLEDGE_TEST_JDBC_URL`、`KNOWLEDGE_TEST_USER`、`KNOWLEDGE_TEST_PASSWORD` 后，
+执行 `./gradlew test --tests '*KnowledgeDocumentRepositoryTests'` 可运行；
+测试数据库需已启用 pgvector，账号需可创建 schema。测试仅使用随机新建的 schema，
+结束后清理，不读写已有知识库文档。
+
+### Similarity search
 
 Search without invoking DeepSeek:
 
