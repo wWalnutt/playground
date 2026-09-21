@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
+import org.springframework.web.multipart.MultipartFile
+import java.nio.ByteBuffer
+import java.nio.charset.CharacterCodingException
+import java.util.Locale
 import java.util.UUID
 
 @Service
@@ -46,6 +50,32 @@ class KnowledgeService(
         chunks.forEachIndexed { index, chunk -> chunk.metadata["chunkIndex"] = index }
         vectorStore.add(chunks)
         return KnowledgeDocumentResponse(documentId, chunks.size)
+    }
+
+    fun ingestFile(file: MultipartFile): KnowledgeDocumentResponse {
+        val filename = file.originalFilename.orEmpty().substringAfterLast('/').substringAfterLast('\\')
+        if (filename.isBlank() || filename.length > 200) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "filename must contain 1 to 200 characters")
+        }
+        if (filename.substringAfterLast('.', "").lowercase(Locale.ROOT) !in setOf("txt", "md", "markdown")) {
+            throw ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "Only TXT and Markdown files are supported")
+        }
+        if (file.size > 65536) {
+            throw ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File must not exceed 64 KiB")
+        }
+        val bytes = file.inputStream.use { it.readNBytes(65537) }
+        if (bytes.size > 65536) {
+            throw ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "File must not exceed 64 KiB")
+        }
+        val text = try {
+            Charsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString().removePrefix("\uFEFF")
+        } catch (exception: CharacterCodingException) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "File must be UTF-8 encoded", exception)
+        }
+        if (text.any { it.isISOControl() && it !in "\n\r\t" }) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "File must contain plain text, not binary data")
+        }
+        return ingest(KnowledgeDocumentRequest(text, filename))
     }
 
     fun search(request: KnowledgeSearchRequest): List<KnowledgeMatch> {

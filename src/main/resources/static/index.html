@@ -10,25 +10,28 @@
 </head>
 <body>
   <main class="window">
-    <aside class="sidebar" aria-label="当前会话">
+    <aside class="sidebar" aria-label="功能导航">
       <div class="brand"><span class="brand-icon" aria-hidden="true">聊</span> AI 聊天</div>
-      <div class="conversation" aria-current="true">
-        <div class="avatar assistant-avatar" aria-hidden="true">D</div>
-        <div><strong>DeepSeek</strong><p>你的 AI 助手</p></div>
-      </div>
+      <nav class="navigation" aria-label="选择功能">
+        <button type="button" class="nav-item" data-view="chat" aria-current="page" aria-controls="messages chat-form">
+          <span class="nav-icon" aria-hidden="true">DS</span>
+          <span><strong>DS 正常对话</strong><small>直接与 DeepSeek 聊天</small></span>
+        </button>
+        <button type="button" class="nav-item" data-view="rag" aria-controls="rag-messages chat-form">
+          <span class="nav-icon" aria-hidden="true">R</span>
+          <span><strong>RAG 对话</strong><small>根据知识库资料回答</small></span>
+        </button>
+        <button type="button" class="nav-item" data-view="upload" aria-controls="reference-panel">
+          <span class="nav-icon" aria-hidden="true">+</span>
+          <span><strong>上传参考文档</strong><small>输入文本或上传文件</small></span>
+        </button>
+      </nav>
       <p class="sidebar-note">Spring AI · DeepSeek<br>让想法从一句话开始</p>
     </aside>
 
-    <section class="chat-panel" aria-label="与 DeepSeek 对话">
+    <section class="chat-panel" aria-labelledby="view-title">
       <header class="chat-header">
-        <div><h1>DeepSeek</h1><p>有什么想聊的，尽管说</p></div>
-        <div class="mode-control">
-          <label for="chat-mode">对话模式</label>
-          <select id="chat-mode" aria-describedby="mode-hint">
-            <option value="chat">普通聊天</option>
-            <option value="rag">知识库 RAG</option>
-          </select>
-        </div>
+        <div><h1 id="view-title">DS 正常对话</h1><p id="view-description">有什么想聊的，尽管说</p></div>
       </header>
       <p id="mode-hint" class="mode-hint">普通聊天：直接调用 DeepSeek，不检索知识库。</p>
 
@@ -44,6 +47,18 @@
         </article>
       </div>
 
+      <div class="messages" id="rag-messages" role="log" aria-label="RAG 聊天消息" aria-live="polite"
+           aria-relevant="additions text" tabindex="0" hidden>
+        <p class="conversation-note">当前为单轮对话：每次检索知识库，不携带历史消息。刷新页面后清空对话记录。</p>
+        <article class="message assistant">
+          <div class="avatar assistant-avatar" aria-hidden="true">R</div>
+          <div class="message-body">
+            <span class="message-label">知识库助手</span>
+            <div class="bubble">先到左侧“上传参考文档”添加资料，再来这里提问。我会根据检索到的资料回答，并展示来源。</div>
+          </div>
+        </article>
+      </div>
+
       <form id="chat-form" class="composer">
         <label for="message-input">发送消息</label>
         <textarea id="message-input" name="message" rows="3"
@@ -54,6 +69,37 @@
           <button id="send-button" type="submit" disabled>发送</button>
         </div>
       </form>
+
+      <section id="reference-panel" class="reference-panel" aria-label="添加知识库资料" hidden>
+        <p class="reference-note">资料会存入共享知识库，刷新页面仍保留；重复提交会新增记录，不会覆盖原资料。
+          RAG 问答时，相关原文会发送给 DeepSeek，请只上传允许共享的内容。</p>
+        <form id="text-upload-form" class="upload-card">
+          <h2>直接输入文本</h2>
+          <p class="upload-hint">填写资料名称和正文，提交后自动分块、向量化并入库。</p>
+          <label for="document-source">资料名称</label>
+          <input id="document-source" name="source" type="text" value="手动输入" maxlength="200" required>
+          <label for="document-text">参考内容</label>
+          <textarea id="document-text" name="text" rows="7" maxlength="20000" placeholder="输入或粘贴参考资料…"
+                    aria-describedby="text-count" required></textarea>
+          <div class="upload-controls">
+            <span id="text-count">0 / 20,000 字符</span>
+            <button id="text-upload-button" class="upload-button" type="submit" disabled>文本入库</button>
+          </div>
+          <p id="text-upload-status" class="upload-status" role="status" aria-live="polite"></p>
+        </form>
+        <form id="upload-form" class="upload-card">
+          <h2>上传文件</h2>
+          <p id="upload-hint" class="upload-hint">支持 UTF-8 编码的 .txt、.md、.markdown。
+            单文件最多 64 KiB、正文最多 20,000 字符，以文件名记录来源。</p>
+          <label for="document-file">选择参考文档</label>
+          <div class="upload-controls">
+            <input id="document-file" name="file" type="file" accept=".txt,.md,.markdown"
+                   aria-describedby="upload-hint" required>
+            <button id="upload-button" class="upload-button" type="submit" disabled>上传并入库</button>
+          </div>
+          <p id="upload-status" class="upload-status" role="status" aria-live="polite"></p>
+        </form>
+      </section>
     </section>
   </main>
 </body>

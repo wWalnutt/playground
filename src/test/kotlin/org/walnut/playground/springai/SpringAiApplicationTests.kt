@@ -49,8 +49,16 @@ class SpringAiApplicationTests {
         HttpClient.newHttpClient().use { client ->
             listOf(
                 "/" to "id=\"chat-form\"",
-                "/" to "id=\"chat-mode\"",
+                "/" to "data-view=\"chat\"",
+                "/" to "data-view=\"rag\"",
+                "/" to "data-view=\"upload\"",
+                "/" to "id=\"rag-messages\"",
+                "/" to "id=\"upload-form\"",
+                "/" to "id=\"text-upload-form\"",
+                "/" to "id=\"document-source\"",
+                "/" to "id=\"document-text\"",
                 "/chat.js" to "\"/api/rag/chat\" : \"/api/chat\"",
+                "/chat.js" to "/api/knowledge/documents/upload",
                 "/chat.css" to ".bubble",
             ).forEach { (path, content) ->
                 val response = client.send(

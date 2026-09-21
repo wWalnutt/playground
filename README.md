@@ -44,8 +44,10 @@ docker-compose -f docker-compose.pgvector.yml --profile embedding up -d --wait
 ./gradlew bootRun --args='--spring.profiles.active=vectors'
 ```
 
-打开聊天页面：<http://localhost:8080/>。顶部可切换“普通聊天”和“知识库 RAG”。
-普通聊天直接调用 DeepSeek；RAG 先检索知识库，并在回复下方展示可展开的来源。
+打开聊天页面：<http://localhost:8080/>。左侧有“DS 正常对话”“RAG 对话”
+和“上传参考文档”三个入口，手机端显示为顶部导航。
+正常对话直接调用 DeepSeek；RAG 先检索知识库，并在回复下方展示可展开的来源。
+上传页支持直接输入资料名称和正文，也支持选择 TXT/Markdown 文件。
 
 如果只需要 DeepSeek 聊天，不需要数据库和 Ollama：
 
@@ -98,10 +100,21 @@ Open `http://localhost:8080/` for the chat UI. Enter sends a message; Shift+Ente
 adds a newline. Failed requests can be retried. The page keeps messages only
 until refresh and sends only the current message to DeepSeek, not the history.
 The API key stays on the server and must not be placed in frontend files.
-The mode selector defaults to plain chat (`/api/chat`). RAG mode calls
+The sidebar defaults to “DS 正常对话” (`/api/chat`). “RAG 对话” calls
 `/api/rag/chat` with `topK: 3`, requires the `vectors` profile, and displays
 retrieved sources below the answer. Each message is labeled with its mode;
 retries use the original mode even after switching. Both modes are single-turn.
+The two chat views keep separate message lists and input drafts in the page;
+switching views does not erase them, but refreshing does.
+
+Select “上传参考文档” in the sidebar. Under “直接输入文本”, enter a source name
+(up to 200 characters) and text (up to 20,000 characters), then click “文本入库”;
+this calls `/api/knowledge/documents`. Alternatively, select a TXT or Markdown
+file under “上传文件” and click “上传并入库”. Both methods show the document ID
+and indexed chunk count. Then select “RAG 对话” to ask about the material.
+Uploads require the `vectors` profile and running PostgreSQL/Ollama.
+While a request is running, navigation and further submissions are disabled
+to avoid accidental concurrent requests. Upload drafts remain intact on error.
 
 ```bash
 curl http://localhost:8080/api/chat \
@@ -203,6 +216,35 @@ The pipeline splits text into approximately 500-token chunks, embeds them, and
 stores the original text plus source, document ID, model, and chunk index.
 The response contains `documentId` and `chunksIndexed`. Each upload creates new
 records; uploading the same text again is not deduplicated.
+
+### Upload a reference file
+
+The frontend uploads files to `POST /api/knowledge/documents/upload` as
+`multipart/form-data`, using the `file` field. You can also call it directly:
+
+```bash
+curl http://localhost:8080/api/knowledge/documents/upload \
+  -F 'file=@/path/to/policy.md'
+```
+
+Supported extensions are `.txt`, `.md`, and `.markdown` (case-insensitive).
+Files must be UTF-8 encoded (an optional UTF-8 BOM is accepted), nonempty,
+at most 64 KiB, and contain at most 20,000 characters. Filenames must be at most
+200 characters. PDF/Word are not supported; renaming them does not convert them.
+Invalid content returns HTTP 400, unsupported extensions 415, oversized uploads
+413. Files are treated as plain text, including Markdown; content is not
+rendered as HTML or saved using client-supplied filesystem paths.
+
+The backend uses the same chunking and indexing pipeline as the text endpoint.
+It records the basename as `metadata.source` and returns `documentId` plus
+`chunksIndexed`. Only extracted text chunks, vectors, and metadata are retained
+in the database, not a downloadable copy of the original file.
+The knowledge base is shared across conversations and persists after refresh.
+No deduplication or automatic upload retry is performed. If a request times out
+or fails mid-indexing, inspect the database/backend logs before resubmitting:
+the server may have written some or all of the data.
+Ingestion is local; subsequent RAG requests send relevant passages to DeepSeek,
+so upload only documents permitted to be shared with that service.
 
 Search without invoking DeepSeek:
 

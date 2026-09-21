@@ -6,6 +6,7 @@ import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.ai.vectorstore.SearchRequest
 import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.http.HttpStatus
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.web.server.ResponseStatusException
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyList
@@ -69,6 +70,47 @@ class KnowledgeServiceTests {
         }.`when`(vectorStore).add(anyList())
         assertEquals(1, service.ingest(KnowledgeDocumentRequest("Hi")).chunksIndexed)
         assertEquals("Hi", stored.single().text)
+    }
+
+    @Test
+    fun acceptsUtf8FilesAndPreservesCleanFilename() {
+        var stored = emptyList<Document>()
+        doAnswer { invocation ->
+            stored = invocation.getArgument(0)
+            null
+        }.`when`(vectorStore).add(anyList())
+        val text = "差旅报销须在30天内提交。"
+        listOf("policy.txt", "policy.MD", "policy.markdown").forEach { filename ->
+            val file = MockMultipartFile("file", "C:\\fakepath\\$filename", "application/octet-stream",
+                ("\uFEFF" + text).toByteArray(Charsets.UTF_8))
+            val result = service.ingestFile(file)
+            assertEquals(1, result.chunksIndexed)
+            assertEquals(text, stored.single().text)
+            assertEquals(filename, stored.single().metadata["source"])
+            assertEquals(result.documentId, stored.single().metadata["documentId"])
+        }
+    }
+
+    @Test
+    fun rejectsUnsupportedEmptyOversizedBinaryAndInvalidUtf8Files() {
+        val cases = listOf(
+            Triple("policy.pdf", "text".toByteArray(), HttpStatus.UNSUPPORTED_MEDIA_TYPE),
+            Triple("policy.txt", byteArrayOf(), HttpStatus.BAD_REQUEST),
+            Triple("policy.txt", "\uFEFF \n\t".toByteArray(), HttpStatus.BAD_REQUEST),
+            Triple("policy.txt", byteArrayOf(0xc3.toByte(), 0x28), HttpStatus.BAD_REQUEST),
+            Triple("policy.txt", byteArrayOf(0, 1, 2), HttpStatus.BAD_REQUEST),
+            Triple("policy.txt", ByteArray(65537) { 65 }, HttpStatus.PAYLOAD_TOO_LARGE),
+            Triple("policy.txt", "a".repeat(20001).toByteArray(), HttpStatus.BAD_REQUEST),
+            Triple("", "text".toByteArray(), HttpStatus.BAD_REQUEST),
+            Triple("a".repeat(200) + ".txt", "text".toByteArray(), HttpStatus.BAD_REQUEST),
+        )
+        cases.forEach { (name, bytes, expectedStatus) ->
+            val error = assertFailsWith<ResponseStatusException> {
+                service.ingestFile(MockMultipartFile("file", name, "text/plain", bytes))
+            }
+            assertEquals(expectedStatus, error.statusCode)
+        }
+        verifyNoInteractions(embeddingModel, vectorStore)
     }
 
     @Test

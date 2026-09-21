@@ -1,9 +1,12 @@
 package org.walnut.playground.springai
 
 import org.springframework.context.annotation.Profile
+import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 
 data class EmbeddingRequest(val text: String)
 data class EmbeddingResponse(val model: String, val dimensions: Int, val vector: List<Float>)
@@ -27,6 +30,10 @@ class KnowledgeController(private val knowledgeService: KnowledgeService) {
     @PostMapping("/api/knowledge/documents")
     fun ingest(@RequestBody request: KnowledgeDocumentRequest): KnowledgeDocumentResponse =
         knowledgeService.ingest(request)
+
+    @PostMapping("/api/knowledge/documents/upload", consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
+    fun upload(@RequestParam("file") file: MultipartFile): KnowledgeDocumentResponse =
+        knowledgeService.ingestFile(file)
 
     @PostMapping("/api/knowledge/search")
     fun search(@RequestBody request: KnowledgeSearchRequest): List<KnowledgeMatch> =

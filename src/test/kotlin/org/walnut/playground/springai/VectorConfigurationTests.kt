@@ -6,6 +6,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
+import org.mockito.ArgumentMatchers.anyList
+import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.verify
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
@@ -74,6 +76,51 @@ class VectorConfigurationTests {
         assertEquals(1024, result.dimensions)
         assertTrue(requestBody.get().contains("bge-m3"))
         assertTrue(requestBody.get().contains("hello"))
+    }
+
+    @Test
+    fun uploadsReferenceFileThroughMultipartEndpoint() {
+        var stored = emptyList<Document>()
+        doAnswer { invocation ->
+            stored = invocation.getArgument(0)
+            null
+        }.`when`(vectorStore).add(anyList())
+        val text = "差旅报销须在30天内提交。"
+        val response = upload("policy.md", text.toByteArray(Charsets.UTF_8))
+        assertEquals(200, response.statusCode())
+        val result = objectMapper.readTree(response.body())
+        assertEquals(1, result["chunksIndexed"].asInt())
+        assertEquals(text, stored.single().text)
+        assertEquals("policy.md", stored.single().metadata["source"])
+        assertEquals(result["documentId"].asString(), stored.single().metadata["documentId"])
+        assertEquals("", chatRequest.get())
+    }
+
+    @Test
+    fun rejectsInvalidUploadsOverHttp() {
+        assertEquals(415, upload("policy.pdf", "text".toByteArray()).statusCode())
+        assertEquals(400, upload("policy.txt", byteArrayOf()).statusCode())
+        assertEquals(400, upload("policy.txt", byteArrayOf(0xff.toByte())).statusCode())
+        assertEquals(400, upload("policy.txt", "a".repeat(20001).toByteArray()).statusCode())
+        assertEquals(413, upload("policy.txt", ByteArray(65537) { 65 }).statusCode())
+        verifyNoInteractions(vectorStore)
+        assertEquals("", chatRequest.get())
+    }
+
+    private fun upload(filename: String, bytes: ByteArray): HttpResponse<String> {
+        val boundary = "reference-file-boundary"
+        val body = (
+            "--$boundary\r\nContent-Disposition: form-data; name=\"file\"; filename=\"$filename\"\r\n" +
+                "Content-Type: application/octet-stream\r\n\r\n"
+            ).toByteArray() + bytes + "\r\n--$boundary--\r\n".toByteArray()
+        val port = context.environment.getRequiredProperty("local.server.port")
+        val request = HttpRequest.newBuilder(URI("http://localhost:$port/api/knowledge/documents/upload"))
+            .header("Content-Type", "multipart/form-data; boundary=$boundary")
+            .POST(HttpRequest.BodyPublishers.ofByteArray(body))
+            .build()
+        return HttpClient.newHttpClient().use {
+            it.send(request, HttpResponse.BodyHandlers.ofString())
+        }
     }
 
     @Test
