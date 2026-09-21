@@ -34,6 +34,7 @@ dependencyManagement {
 dependencies {
     add("implementation", "org.springframework.boot:spring-boot-starter")
     add("implementation", "org.springframework.boot:spring-boot-starter-web")
+    add("implementation", "tools.jackson.module:jackson-module-kotlin")
     add("implementation", "org.springframework.boot:spring-boot-starter-data-jpa")
     add("runtimeOnly", "com.h2database:h2")
     add("implementation", "org.jetbrains.kotlin:kotlin-reflect")

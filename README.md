@@ -158,8 +158,9 @@ SQL manually as a database administrator.
 
 Chat still uses DeepSeek. Embedding and similarity search run locally using
 Ollama's `bge-m3` (1024 dimensions) and PostgreSQL. These endpoints do not send
-document contents to DeepSeek, and `/api/chat` does not use retrieved documents
-yet. The frontend chat behavior is unchanged.
+document contents to DeepSeek. `/api/chat` remains plain chat, and the frontend
+chat behavior is unchanged. The separate `/api/rag/chat` endpoint below does send
+retrieved passages to DeepSeek.
 
 Use the startup command reference above to download the model and enable the
 `vectors` profile.
@@ -222,6 +223,39 @@ FROM bge_m3_documents;
 Do not mix different embedding models in this table. Changing models requires
 a separate compatible table and re-embedding the documents; the earlier
 three-dimensional `vector_demo` table is not used.
+
+## RAG chat
+
+With the `vectors` profile enabled and documents already indexed, call:
+
+```bash
+curl http://localhost:8080/api/rag/chat \
+  -H 'Content-Type: application/json' \
+  -d '{"question":"出差回来多久要申请报销？","topK":3}'
+```
+
+The backend reuses knowledge search, supplies retrieved text to DeepSeek, and
+returns `answer` plus `sources`. `question` must contain 1 to 2,000 characters
+and cannot be blank. `topK` defaults to 3 and accepts 1 to 20.
+
+Each source contains `reference` (the number used in `[1]` citations), `chunkId`,
+the original `text`, original `metadata` (including `source` and `documentId`),
+and similarity `score`. Sources are the actual passages supplied to the model,
+not a model-generated source list or proof that every claim is supported.
+
+If no usable passages are found, the endpoint returns an explicit
+insufficient-information answer with `sources: []`, without calling DeepSeek.
+When passages are found, the prompt instructs the model to use only those
+passages, cite them, and admit when they are insufficient. Retrieval currently
+uses top-K neighbors without a relevance threshold; these instructions do not
+guarantee factual accuracy or correct inline citations. Source text is treated
+as untrusted data rather than system instructions.
+
+This endpoint sends the question and retrieved document text to DeepSeek's
+hosted API. Only use documents permitted to be shared with that service.
+Provider or database failures propagate as errors rather than being reported as
+"no information"; an empty model reply returns HTTP 502.
+The existing `/api/chat` and the frontend remain unchanged, with no chat history.
 
 # kafka
 docker-compose -f docker-compose.kafka.yml up -d
