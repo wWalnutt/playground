@@ -22,8 +22,15 @@
     <section class="chat-panel" aria-label="与 DeepSeek 对话">
       <header class="chat-header">
         <div><h1>DeepSeek</h1><p>有什么想聊的，尽管说</p></div>
-        <span class="model-tag">AI 助手</span>
+        <div class="mode-control">
+          <label for="chat-mode">对话模式</label>
+          <select id="chat-mode" aria-describedby="mode-hint">
+            <option value="chat">普通聊天</option>
+            <option value="rag">知识库 RAG</option>
+          </select>
+        </div>
       </header>
+      <p id="mode-hint" class="mode-hint">普通聊天：直接调用 DeepSeek，不检索知识库。</p>
 
       <div class="messages" id="messages" role="log" aria-label="聊天消息" aria-live="polite"
            aria-relevant="additions text" tabindex="0">
@@ -40,7 +47,7 @@
       <form id="chat-form" class="composer">
         <label for="message-input">发送消息</label>
         <textarea id="message-input" name="message" rows="3"
-                  placeholder="输入你想说的话…" aria-describedby="input-hint" required></textarea>
+                  placeholder="输入你想说的话…" aria-describedby="input-hint mode-hint" required></textarea>
         <div class="composer-footer">
           <span id="input-hint">Enter 发送，Shift + Enter 换行</span>
           <span id="request-status" role="status" aria-live="polite"></span>

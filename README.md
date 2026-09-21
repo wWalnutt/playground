@@ -44,8 +44,8 @@ docker-compose -f docker-compose.pgvector.yml --profile embedding up -d --wait
 ./gradlew bootRun --args='--spring.profiles.active=vectors'
 ```
 
-打开聊天页面：<http://localhost:8080/>。向量化、入库和检索接口也已启用，
-但聊天暂不自动检索知识库。
+打开聊天页面：<http://localhost:8080/>。顶部可切换“普通聊天”和“知识库 RAG”。
+普通聊天直接调用 DeepSeek；RAG 先检索知识库，并在回复下方展示可展开的来源。
 
 如果只需要 DeepSeek 聊天，不需要数据库和 Ollama：
 
@@ -98,6 +98,10 @@ Open `http://localhost:8080/` for the chat UI. Enter sends a message; Shift+Ente
 adds a newline. Failed requests can be retried. The page keeps messages only
 until refresh and sends only the current message to DeepSeek, not the history.
 The API key stays on the server and must not be placed in frontend files.
+The mode selector defaults to plain chat (`/api/chat`). RAG mode calls
+`/api/rag/chat` with `topK: 3`, requires the `vectors` profile, and displays
+retrieved sources below the answer. Each message is labeled with its mode;
+retries use the original mode even after switching. Both modes are single-turn.
 
 ```bash
 curl http://localhost:8080/api/chat \
@@ -158,8 +162,8 @@ SQL manually as a database administrator.
 
 Chat still uses DeepSeek. Embedding and similarity search run locally using
 Ollama's `bge-m3` (1024 dimensions) and PostgreSQL. These endpoints do not send
-document contents to DeepSeek. `/api/chat` remains plain chat, and the frontend
-chat behavior is unchanged. The separate `/api/rag/chat` endpoint below does send
+document contents to DeepSeek. `/api/chat` remains plain chat. The separate
+`/api/rag/chat` endpoint, also used by the frontend's RAG mode, does send
 retrieved passages to DeepSeek.
 
 Use the startup command reference above to download the model and enable the
@@ -255,7 +259,7 @@ This endpoint sends the question and retrieved document text to DeepSeek's
 hosted API. Only use documents permitted to be shared with that service.
 Provider or database failures propagate as errors rather than being reported as
 "no information"; an empty model reply returns HTTP 502.
-The existing `/api/chat` and the frontend remain unchanged, with no chat history.
+The existing `/api/chat` remains unchanged; neither mode sends chat history.
 
 # kafka
 docker-compose -f docker-compose.kafka.yml up -d
