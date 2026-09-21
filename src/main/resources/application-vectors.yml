@@ -1,0 +1,35 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+  datasource:
+    url: jdbc:postgresql://${PGVECTOR_HOST:localhost}:${PGVECTOR_PORT:5433}/${PGVECTOR_DB:knowledge}
+    username: ${PGVECTOR_USER:knowledge}
+    password: ${PGVECTOR_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  data:
+    jpa:
+      repositories:
+        enabled: false
+  ai:
+    model:
+      chat: deepseek
+      embedding: ollama
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      init:
+        pull-model-strategy: never
+      embedding:
+        options:
+          model: bge-m3
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        schema-validation: true
+        schema-name: public
+        table-name: bge_m3_documents
+        dimensions: 1024
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE

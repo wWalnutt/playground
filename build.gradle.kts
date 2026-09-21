@@ -42,6 +42,9 @@ dependencies {
 
     // Spring AI DeepSeek chat
     add("implementation", "org.springframework.ai:spring-ai-starter-model-deepseek")
+    add("implementation", "org.springframework.ai:spring-ai-starter-model-ollama")
+    add("implementation", "org.springframework.ai:spring-ai-starter-vector-store-pgvector")
+    add("runtimeOnly", "org.postgresql:postgresql")
 
     add("testImplementation", "org.springframework.boot:spring-boot-starter-test")
     add("testImplementation", "org.jetbrains.kotlin:kotlin-test-junit5")

@@ -1,4 +1,18 @@
 services:
+  ollama:
+    image: ollama/ollama:latest
+    profiles: ["embedding"]
+    ports:
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   pgvector:
     image: pgvector/pgvector:0.8.0-pg16
     ports:
@@ -24,3 +38,4 @@ services:
 
 volumes:
   pgvector_data:
+  ollama_data:
