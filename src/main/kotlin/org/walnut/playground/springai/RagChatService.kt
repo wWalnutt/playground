@@ -16,12 +16,17 @@ class RagChatService(
     private val chatClient = chatClientBuilder.build()
 
     fun chat(request: RagChatRequest): RagChatResponse {
-        val matches = knowledgeService.search(KnowledgeSearchRequest(request.question, request.topK))
-        val sources = matches.filter { !it.text.isNullOrBlank() }.mapIndexed { index, match ->
+        val retrieval = knowledgeService.searchWithDiagnostics(
+            KnowledgeSearchRequest(request.question, request.topK, request.similarityThreshold),
+        )
+        val sources = retrieval.matches.mapIndexed { index, match ->
             RagSource(index + 1, match.id, requireNotNull(match.text), match.metadata, match.score)
         }
         if (sources.isEmpty()) {
-            return RagChatResponse("知识库中没有可用资料，暂时无法根据资料回答这个问题。", emptyList())
+            return RagChatResponse(
+                "本次检索没有达到相似度阈值的可用资料，暂时无法根据资料回答这个问题。",
+                emptyList(), retrieval.diagnostics, false,
+            )
         }
 
         val context = sources.joinToString("\n\n") { "[${it.reference}]\n${it.text}" }
@@ -45,6 +50,6 @@ class RagChatService(
             throw ResponseStatusException(HttpStatus.BAD_GATEWAY, "DeepSeek returned an empty reply")
         }
         // Return retrieved evidence directly; never ask the model to manufacture source metadata.
-        return RagChatResponse(answer, sources)
+        return RagChatResponse(answer, sources, retrieval.diagnostics, true)
     }
 }

@@ -17,7 +17,7 @@ data class EmbeddingRequest(val text: String)
 data class EmbeddingResponse(val model: String, val dimensions: Int, val vector: List<Float>)
 data class KnowledgeDocumentRequest(val text: String, val source: String = "inline")
 data class KnowledgeDocumentResponse(val documentId: String, val chunksIndexed: Int)
-data class KnowledgeSearchRequest(val query: String, val topK: Int = 3)
+data class KnowledgeSearchRequest(val query: String, val topK: Int = 3, val similarityThreshold: Double? = null)
 data class KnowledgeMatch(
     val id: String,
     val text: String?,
@@ -57,4 +57,8 @@ class KnowledgeController(private val knowledgeService: KnowledgeService) {
     @PostMapping("/api/knowledge/search")
     fun search(@RequestBody request: KnowledgeSearchRequest): List<KnowledgeMatch> =
         knowledgeService.search(request)
+
+    @PostMapping("/api/knowledge/search/diagnostics")
+    fun searchWithDiagnostics(@RequestBody request: KnowledgeSearchRequest): KnowledgeSearchResponse =
+        knowledgeService.searchWithDiagnostics(request)
 }

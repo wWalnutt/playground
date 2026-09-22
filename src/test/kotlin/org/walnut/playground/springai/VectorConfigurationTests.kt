@@ -10,6 +10,7 @@ import org.mockito.ArgumentMatchers.anyList
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.doAnswer
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.times
 import org.mockito.Mockito.verifyNoInteractions
 import org.mockito.Mockito.`when`
 import org.springframework.ai.chat.model.ChatModel
@@ -54,6 +55,7 @@ import kotlin.test.assertTrue
         "spring.datasource.username=sa",
         "spring.datasource.password=",
         "spring.ai.deepseek.api-key=test-key",
+        "app.retrieval.similarity-threshold=0.6",
     ],
 )
 @ActiveProfiles("vectors")
@@ -201,7 +203,8 @@ class VectorConfigurationTests {
     @Test
     fun ragEndpointSendsRetrievedTextAndReturnsRealSources() {
         val text = "Submit travel expenses within 30 days. Keep {receipt}."
-        val document = Document("chunk-1", text, mapOf("source" to "policy", "documentId" to "document-1"))
+        val document = Document.builder().id("chunk-1").text(text)
+            .metadata(mapOf("source" to "policy", "documentId" to "document-1")).score(0.8).build()
         `when`(vectorStore.similaritySearch(any(SearchRequest::class.java))).thenReturn(listOf(document))
 
         val response = ragPost("""{"question":"When must I submit expenses?","topK":2}""")
@@ -209,6 +212,8 @@ class VectorConfigurationTests {
         assertEquals(200, response.statusCode())
         val result = objectMapper.readTree(response.body())
         assertEquals("Submit within 30 days. [1]", result["answer"].asString())
+        assertTrue(result["modelCalled"].asBoolean())
+        assertEquals(0.6, result["diagnostics"]["similarityThreshold"].asDouble())
         assertEquals(1, result["sources"].size())
         val source = result["sources"][0]
         assertEquals(1, source["reference"].asInt())
@@ -226,6 +231,7 @@ class VectorConfigurationTests {
         verify(vectorStore).similaritySearch(captor.capture())
         assertEquals("When must I submit expenses?", captor.value.query)
         assertEquals(2, captor.value.topK)
+        assertEquals(0.0, captor.value.similarityThreshold)
     }
 
     @Test
@@ -234,6 +240,8 @@ class VectorConfigurationTests {
         assertEquals(200, response.statusCode())
         val result = objectMapper.readTree(response.body())
         assertTrue(result["sources"].isEmpty)
+        assertTrue(!result["modelCalled"].asBoolean())
+        assertEquals(0, result["diagnostics"]["candidateCount"].asInt())
         assertTrue(result["answer"].asString().isNotBlank())
         assertEquals("", chatRequest.get())
         val captor = ArgumentCaptor.forClass(SearchRequest::class.java)
@@ -250,6 +258,8 @@ class VectorConfigurationTests {
             """{"question":"hello","topK":21}""",
             """{"question":null}""",
             """{"question":"hello","topK":null}""",
+            """{"question":"hello","similarityThreshold":-0.1}""",
+            """{"question":"hello","similarityThreshold":1.1}""",
             """{}""",
         ).forEach { json -> assertEquals(400, ragPost(json).statusCode()) }
         verifyNoInteractions(vectorStore)
@@ -259,7 +269,7 @@ class VectorConfigurationTests {
     @Test
     fun ragRejectsEmptyModelReply() {
         `when`(vectorStore.similaritySearch(any(SearchRequest::class.java)))
-            .thenReturn(listOf(Document("Submit expenses within 30 days.")))
+            .thenReturn(listOf(Document.builder().text("Submit expenses within 30 days.").score(0.8).build()))
         assertEquals(502, ragPost("""{"question":"empty-provider-reply"}""").statusCode())
     }
 
@@ -271,9 +281,132 @@ class VectorConfigurationTests {
         assertEquals("", chatRequest.get())
     }
 
-    private fun ragPost(json: String): HttpResponse<String> {
+    @Test
+    fun ragDoesNotHideModelFailure() {
+        `when`(vectorStore.similaritySearch(any(SearchRequest::class.java)))
+            .thenReturn(listOf(Document.builder().text("Usable evidence").score(0.8).build()))
+        assertEquals(500, ragPost("""{"question":"provider-failure"}""").statusCode())
+        assertTrue(chatRequest.get().contains("provider-failure"))
+    }
+
+    @Test
+    fun bothSearchEndpointsAndRagShareThresholdPoolAndAcceptedEvidence() {
+        `when`(vectorStore.similaritySearch(any(SearchRequest::class.java))).thenReturn(
+            listOf(
+                Document.builder().id("rejected").text("REJECTED_SECRET_TEXT").score(0.4).build(),
+                Document.builder().id("accepted-1").text("Submit travel expenses within 30 days.").score(0.7)
+                    .metadata(mapOf("source" to "policy")).build(),
+                Document.builder().id("blank").text(" \n").score(0.9).build(),
+                Document.builder().id("accepted-2").text("Keep the receipt.").score(0.8).build(),
+            ),
+        )
+        val json = """{"query":"expenses","topK":4,"similarityThreshold":0.7}"""
+        val legacy = apiPost("/api/knowledge/search", json)
+        val diagnostic = apiPost("/api/knowledge/search/diagnostics", json)
+        assertEquals(200, legacy.statusCode())
+        assertEquals(200, diagnostic.statusCode())
+        assertEquals("", chatRequest.get())
+        val legacyJson = objectMapper.readTree(legacy.body())
+        val searchJson = objectMapper.readTree(diagnostic.body())
+        assertTrue(legacyJson.isArray)
+        assertEquals(legacyJson, searchJson["matches"])
+        val details = searchJson["diagnostics"]
+        assertEquals(4, details["topK"].asInt())
+        assertEquals(0.7, details["similarityThreshold"].asDouble())
+        assertEquals(4, details["candidateCount"].asInt())
+        assertEquals(2, details["acceptedCount"].asInt())
+        assertEquals(2, details["rejectedCount"].asInt())
+        assertTrue(details["elapsedMs"].asLong() >= 0)
+        assertEquals(4, details["candidates"].size())
+        val rejected = details["candidates"][0]
+        assertEquals("rejected", rejected["chunkId"].asString())
+        assertTrue(rejected["source"].isNull)
+        assertEquals(0.4, rejected["score"].asDouble())
+        assertTrue(!rejected["accepted"].asBoolean())
+        assertEquals("BELOW_THRESHOLD", rejected["reason"].asString())
+        assertEquals("policy", details["candidates"][1]["source"].asString())
+        assertEquals("ACCEPTED", details["candidates"][1]["reason"].asString())
+        assertEquals("EMPTY_TEXT", details["candidates"][2]["reason"].asString())
+        assertTrue(!diagnostic.body().contains("REJECTED_SECRET_TEXT"))
+        assertTrue(!details.toString().contains("\"text\""))
+        val rag = ragPost("""{"question":"expenses","topK":4,"similarityThreshold":0.7}""")
+        assertEquals(200, rag.statusCode())
+        val ragJson = objectMapper.readTree(rag.body())
+        assertEquals(details["candidates"], ragJson["diagnostics"]["candidates"])
+        assertTrue(ragJson["modelCalled"].asBoolean())
+        assertEquals(1, ragJson["sources"][0]["reference"].asInt())
+        assertEquals("accepted-1", ragJson["sources"][0]["chunkId"].asString())
+        assertEquals(2, ragJson["sources"][1]["reference"].asInt())
+        assertEquals("accepted-2", ragJson["sources"][1]["chunkId"].asString())
+        assertTrue(!chatRequest.get().contains("REJECTED_SECRET_TEXT"))
+        val prompt = objectMapper.readTree(chatRequest.get())["messages"][1]["content"].asString()
+        assertTrue(prompt.contains("[1]\nSubmit travel expenses"))
+        assertTrue(prompt.contains("[2]\nKeep the receipt."))
+        val captor = ArgumentCaptor.forClass(SearchRequest::class.java)
+        verify(vectorStore, times(3)).similaritySearch(captor.capture())
+        captor.allValues.forEach {
+            assertEquals("expenses", it.query)
+            assertEquals(4, it.topK)
+            assertEquals(0.0, it.similarityThreshold)
+        }
+    }
+
+    @Test
+    fun allRejectedSkipsDeepSeekAndExplicitZeroOverridesConfiguredDefault() {
+        `when`(vectorStore.similaritySearch(any(SearchRequest::class.java))).thenReturn(
+            listOf(Document.builder().id("low").text("Low-scoring evidence").score(0.1).build()),
+        )
+        val refused = ragPost("""{"question":"expenses","similarityThreshold":null}""")
+        assertEquals(200, refused.statusCode())
+        val result = objectMapper.readTree(refused.body())
+        assertTrue(!result["modelCalled"].asBoolean())
+        assertTrue(result["sources"].isEmpty)
+        assertEquals(1, result["diagnostics"]["rejectedCount"].asInt())
+        assertEquals(0.6, result["diagnostics"]["similarityThreshold"].asDouble())
+        assertEquals("", chatRequest.get())
+        val search = apiPost("/api/knowledge/search/diagnostics", """{"query":"expenses","similarityThreshold":0}""")
+        assertEquals(1, objectMapper.readTree(search.body())["matches"].size())
+        assertEquals("", chatRequest.get())
+        val baseline = ragPost("""{"question":"expenses","similarityThreshold":0}""")
+        assertEquals(200, baseline.statusCode())
+        assertTrue(objectMapper.readTree(baseline.body())["modelCalled"].asBoolean())
+    }
+
+    @Test
+    fun searchEndpointsRejectInvalidInputBeforeDependencies() {
+        listOf("/api/knowledge/search", "/api/knowledge/search/diagnostics").forEach { path ->
+            listOf(
+                """{"query":" "}""", """{"query":"${"x".repeat(2001)}"}""",
+                """{"query":"query","topK":0}""", """{"query":"query","topK":21}""",
+                """{"query":"query","similarityThreshold":-0.1}""",
+                """{"query":"query","similarityThreshold":1.1}""",
+                """{"query":null}""", """{"query":"query","topK":null}""",
+            ).forEach { assertEquals(400, apiPost(path, it).statusCode()) }
+        }
+        verifyNoInteractions(vectorStore, documents)
+        assertEquals("", requestBody.get())
+        assertEquals("", chatRequest.get())
+    }
+
+    @Test
+    fun missingScoresAndRetrievalFailuresAreNotSuccessfulEmptyResults() {
+        `when`(vectorStore.similaritySearch(any(SearchRequest::class.java))).thenReturn(listOf(Document("unscored")))
+        assertEquals(502, ragPost("""{"question":"query"}""").statusCode())
+        listOf("/api/knowledge/search", "/api/knowledge/search/diagnostics").forEach {
+            assertEquals(502, apiPost(it, """{"query":"query"}""").statusCode())
+        }
+        `when`(vectorStore.similaritySearch(any(SearchRequest::class.java))).thenThrow(IllegalStateException("upstream"))
+        listOf("/api/knowledge/search", "/api/knowledge/search/diagnostics").forEach {
+            assertEquals(500, apiPost(it, """{"query":"query"}""").statusCode())
+        }
+        assertEquals("", chatRequest.get())
+    }
+
+    private fun ragPost(json: String): HttpResponse<String> = apiPost("/api/rag/chat", json)
+
+    private fun apiPost(path: String, json: String): HttpResponse<String> {
         val port = context.environment.getRequiredProperty("local.server.port")
-        val request = HttpRequest.newBuilder(URI("http://localhost:$port/api/rag/chat"))
+        val request = HttpRequest.newBuilder(URI("http://localhost:$port$path"))
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build()
@@ -297,6 +430,13 @@ class VectorConfigurationTests {
             createContext("/chat/completions") { exchange ->
                 val request = exchange.requestBody.bufferedReader().use { it.readText() }
                 chatRequest.set(request)
+                if ("provider-failure" in request) {
+                    val error = """{"error":{"message":"Upstream failure","type":"invalid_request_error"}}""".toByteArray()
+                    exchange.responseHeaders.set("Content-Type", "application/json")
+                    exchange.sendResponseHeaders(400, error.size.toLong())
+                    exchange.responseBody.use { it.write(error) }
+                    return@createContext
+                }
                 val reply = if ("empty-provider-reply" in request) "" else "Submit within 30 days. [1]"
                 val body = """
                     {"id":"test","object":"chat.completion","created":1,"model":"deepseek-chat",

@@ -5,8 +5,13 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 
-data class RagChatRequest(val question: String, val topK: Int = 3)
-data class RagChatResponse(val answer: String, val sources: List<RagSource>)
+data class RagChatRequest(val question: String, val topK: Int = 3, val similarityThreshold: Double? = null)
+data class RagChatResponse(
+    val answer: String,
+    val sources: List<RagSource>,
+    val diagnostics: RetrievalDiagnostics,
+    val modelCalled: Boolean,
+)
 data class RagSource(
     val reference: Int,
     val chunkId: String,

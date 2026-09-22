@@ -107,6 +107,8 @@ docker-compose -f docker-compose.pgvector.yml --profile embedding up -d --wait
 打开聊天页面：<http://localhost:8080/>。左侧有“DS 正常对话”“RAG 对话”
 和“上传参考文档”三个入口，手机端显示为顶部导航。
 正常对话直接调用 DeepSeek；RAG 先检索知识库，并在回复下方展示可展开的来源。
+RAG 回复还提供“检索诊断”，显示实际阈值、候选与过滤数量、相似度、
+检索耗时及是否调用 DeepSeek。
 上传页支持直接输入资料名称和正文，也支持选择 TXT/Markdown 文件。
 页面下方的“知识库文档”支持分页浏览、查看分块原文和确认删除；上传后自动刷新列表。
 
@@ -163,7 +165,7 @@ until refresh and sends only the current message to DeepSeek, not the history.
 The API key stays on the server and must not be placed in frontend files.
 The sidebar defaults to “DS 正常对话” (`/api/chat`). “RAG 对话” calls
 `/api/rag/chat` with `topK: 3`, requires the `vectors` profile, and displays
-retrieved sources below the answer. Each message is labeled with its mode;
+threshold-filtered sources and retrieval diagnostics below the answer. Each message is labeled with its mode;
 retries use the original mode even after switching. Both modes are single-turn.
 The two chat views keep separate message lists and input drafts in the page;
 switching views does not erase them, but refreshing does.
@@ -369,8 +371,90 @@ curl http://localhost:8080/api/knowledge/search \
 
 Results contain chunk ID, original text, metadata, and similarity score (higher
 is more similar). `topK` must be between 1 and 20; no matches returns `[]`.
-This retrieves nearest neighbors, not a guarantee that a matching answer exists.
+The shared retrieval service fetches at most `topK` baseline candidates, then
+retains nonblank passages with scores greater than or equal to the threshold.
+This is not a guarantee that a matching answer exists.
 Blank or oversized inputs return HTTP 400; dependency failures are not hidden.
+
+### 统一检索、阈值和诊断
+
+`/api/knowledge/search`、`/api/knowledge/search/diagnostics` 和 `/api/rag/chat`
+使用同一个检索服务。现有 search 接口继续返回数组；新的诊断接口返回
+`{matches, diagnostics}`，不会调用 DeepSeek。
+
+```bash
+curl http://localhost:8080/api/knowledge/search/diagnostics \
+  -H 'Content-Type: application/json' \
+  -d '{"query":"Kafka只有6个分区，启动8个消费者能加速吗？","topK":3}'
+```
+
+默认阈值为 **0.46**，由本项目当前 bge-m3 知识库的小规模评估选择。
+可以通过 `RETRIEVAL_SIMILARITY_THRESHOLD` 环境变量（或本地 `.env`）设置，
+对应配置为 `app.retrieval.similarity-threshold`，重启后生效。
+必须是 `[0,1]` 内的有限数值，错误配置会导致启动失败。
+
+上述三个接口均接受可选的 `similarityThreshold`。省略或 `null` 使用服务端配置；
+显式传 `0` 恢复未做正阈值过滤的基线，用于对比，而不是禁用检索。
+阈值在服务端筛选，边界采用 `score >= threshold`；空文本仍然过滤。
+前端不覆盖阈值，而是展示本次实际使用的值。非法请求参数返回 400，
+向量服务返回缺失或非有限分数时返回 502；数据库或模型故障不会伪装成无结果。
+
+`diagnostics` 包含 `topK`、`similarityThreshold`、`candidateCount`、
+`acceptedCount`、`rejectedCount`、`elapsedMs` 和 `candidates`。
+每个候选包含分块 ID `chunkId`、来源 `source`、分数 `score`、
+`accepted`，以及 `ACCEPTED`、`BELOW_THRESHOLD` 或 `EMPTY_TEXT` 原因。
+被过滤候选只提供诊断元数据，不作为生成上下文发送给 DeepSeek。
+候选数量只指本次 top-K 池，不是全库相关文档数量；不会为凑够数量补搜。
+耗时包含查询向量化、向量检索与筛选，不包含 DeepSeek 生成。
+相似度不是正确率，主题相关也不代表材料包含问题要求的具体答案。
+
+### 固定检索评估
+
+`tooling/retrieval/evaluation-cases.json` 固定了 60 个手工标注的问题，涵盖直接提问、
+同义改写、多来源问题、主题接近但缺少答案、完全无关问题。
+评估基于当前共享知识库，**不写入文档、不调用 DeepSeek，只访问本机接口**。
+按资料名称解析标注，若所需文档缺失、重名或仍在入库，会显式中止。
+报告只保留候选标识、来源、分数与统计，不保存检索出的正文；
+语料指纹包含文档与分块内容哈希，以检测评估期间或复验前的资料变化。
+
+```bash
+# 收集零阈值基线，按开发集选择阈值，再报告独立确认集表现
+node tooling/retrieval/evaluate.mjs \
+  --base-url http://localhost:8080 \
+  --output tooling/retrieval/evaluation-report.json
+
+# 后端重启并配置为报告所选阈值后，复验两个搜索接口与默认配置
+node tooling/retrieval/evaluate.mjs \
+  --base-url http://localhost:8080 \
+  --verify-report tooling/retrieval/evaluation-report.json
+```
+
+脚本不自动改写服务端配置。第一条命令显式请求阈值 `0`，避免把已经过滤的结果
+当成基线；第二条命令比较新诊断接口、旧数组接口及逐候选过滤原因，
+并检查实际默认阈值和报告一致。检索分数或语料漂移时会停止，不能直接沿用旧结论。
+新增资料或更换 embedding 模型后应重新评估；反复据确认集调参后，
+该集合就不再是独立验证数据，需要另外准备未参与调参的问题。
+
+本次先尝试了 `0.55`，在原验证集误拒 1 道有答案问题，因此未采用。
+该失败记录保留在 `evaluation-attempt-01.json`；原 40 题明确转为开发数据，
+增加 20 题新的 `confirmation` 集合。选择过程保留开发集原有证据命中，
+并在最弱已命中的标注来源分数下预留 `0.05` 余量，得到 `0.46`。
+新的确认集不参与阈值选择。
+
+| 新确认集指标（20 题） | 零阈值基线 | 阈值 0.46 |
+| --- | --- | --- |
+| 有答案问题命中标注来源 | 14/14 | 14/14 |
+| 标注来源覆盖数量（含多来源题） | 16/16 | 16/16 |
+| 有答案问题被完全拒绝 | 0/14 | 0/14 |
+| 无答案问题仍有资料通过 | 6/6 | 3/6 |
+| 完全无关问题仍有资料通过 | 3/3 | 0/3 |
+| 主题接近但缺少答案仍有资料通过 | 3/3 | 3/3 |
+
+这证明了**在该小样本确认集上**减少无关资料进入生成步骤，且没有新增漏检，
+不是回答准确率达到 100% 的证明。原开发集仍有基线未找到标注资料的问题；
+阈值不会改善排序，也无法可靠判断高相似度材料是否足以回答具体问题。
+报告保存单次检索耗时，但不能把不同运行间缓存和负载造成的变化当成性能提升。
+当前不增加混合检索、重排序或新的模型依赖。
 
 In IDEA's SQL console:
 
@@ -394,7 +478,7 @@ curl http://localhost:8080/api/rag/chat \
 ```
 
 The backend reuses knowledge search, supplies retrieved text to DeepSeek, and
-returns `answer` plus `sources`. `question` must contain 1 to 2,000 characters
+returns `answer`, `sources`, `diagnostics`, and `modelCalled`. `question` must contain 1 to 2,000 characters
 and cannot be blank. `topK` defaults to 3 and accepts 1 to 20.
 
 Each source contains `reference` (the number used in `[1]` citations), `chunkId`,
@@ -402,11 +486,13 @@ the original `text`, original `metadata` (including `source` and `documentId`),
 and similarity `score`. Sources are the actual passages supplied to the model,
 not a model-generated source list or proof that every claim is supported.
 
-If no usable passages are found, the endpoint returns an explicit
-insufficient-information answer with `sources: []`, without calling DeepSeek.
+If no usable passages pass the threshold, the endpoint returns an explicit
+insufficient-information answer with `sources: []` and `modelCalled: false`,
+without calling DeepSeek. This does not assert that the entire knowledge base
+contains no answer. Successful generation returns `modelCalled: true`.
 When passages are found, the prompt instructs the model to use only those
 passages, cite them, and admit when they are insufficient. Retrieval currently
-uses top-K neighbors without a relevance threshold; these instructions do not
+uses the shared top-K pool and threshold filter; these instructions do not
 guarantee factual accuracy or correct inline citations. Source text is treated
 as untrusted data rather than system instructions.
 

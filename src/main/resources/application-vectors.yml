@@ -1,3 +1,7 @@
+app:
+  retrieval:
+    similarity-threshold: ${RETRIEVAL_SIMILARITY_THRESHOLD:0.46}
+
 spring:
   servlet:
     multipart:

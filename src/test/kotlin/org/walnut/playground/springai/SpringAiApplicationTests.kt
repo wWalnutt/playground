@@ -35,6 +35,7 @@ class SpringAiApplicationTests {
         assertTrue("springai" in context.environment.activeProfiles)
         assertIs<DeepSeekChatModel>(context.getBean(ChatModel::class.java))
         assertTrue(context.getBeansOfType(DataSource::class.java).isEmpty())
+        assertTrue(context.getBeansOfType(KnowledgeRetrievalService::class.java).isEmpty())
         assertTrue(context.beanDefinitionNames.none {
             context.getType(it)?.name?.let { name ->
                 name.startsWith("org.walnut.playground.demo.") ||
@@ -63,6 +64,8 @@ class SpringAiApplicationTests {
                 "/" to "id=\"documents-refresh\"",
                 "/chat.js" to "\"/api/rag/chat\" : \"/api/chat\"",
                 "/chat.js" to "/api/knowledge/documents/upload",
+                "/chat.js" to "retrieval-diagnostics",
+                "/chat.js" to "data.modelCalled",
                 "/chat.css" to ".bubble",
             ).forEach { (path, content) ->
                 val response = client.send(

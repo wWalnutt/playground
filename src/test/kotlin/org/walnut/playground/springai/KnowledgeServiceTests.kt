@@ -26,7 +26,7 @@ class KnowledgeServiceTests {
     private val embeddingModel = mock(EmbeddingModel::class.java)
     private val vectorStore = mock(VectorStore::class.java)
     private val documents = mock(KnowledgeDocumentRepository::class.java)
-    private val service = KnowledgeService(embeddingModel, vectorStore, documents)
+    private val service = KnowledgeService(embeddingModel, KnowledgeRetrievalService(vectorStore, 0.0), documents)
 
     @Test
     fun embedsUsingBgeDimensions() {

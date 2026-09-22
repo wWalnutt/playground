@@ -96,7 +96,7 @@ function switchView(view) {
   }[view];
   modeHint.textContent = {
     chat: "普通聊天：直接调用 DeepSeek，不检索知识库。",
-    rag: "RAG 对话：检索 3 条资料后回答（问题最多 2000 字符）。需启用 vectors 配置；相关原文会发送给 DeepSeek。",
+    rag: "RAG 对话：最多检索 3 条候选资料，再按相似度阈值筛选（问题最多 2000 字符）。通过筛选的原文会发送给 DeepSeek。",
     upload: "两种方式都将资料分块、向量化并存入知识库。需要启用 vectors 配置，并运行 PostgreSQL 和 Ollama。",
   }[view];
   input.value = view === "upload" ? "" : drafts[view];
@@ -134,7 +134,7 @@ function renderSources(body, sources) {
   if (!sources.length) {
     const note = document.createElement("p");
     note.className = "sources-note";
-    note.textContent = "未检索到可用资料，本次未调用 DeepSeek。";
+    note.textContent = "本次没有达到阈值的可用资料，未调用 DeepSeek；不代表知识库一定没有答案。";
     body.append(note);
     return;
   }
@@ -166,6 +166,58 @@ function renderSources(body, sources) {
     item.append(title, metadata, text);
     details.append(item);
   });
+  body.append(details);
+}
+
+function validRetrievalDiagnostics(data) {
+  const diagnostic = data.diagnostics;
+  const reasons = ["ACCEPTED", "BELOW_THRESHOLD", "EMPTY_TEXT"];
+  return diagnostic &&
+    Number.isInteger(diagnostic.topK) && diagnostic.topK >= 1 && diagnostic.topK <= 20 &&
+    Number.isFinite(diagnostic.similarityThreshold) && diagnostic.similarityThreshold >= 0 && diagnostic.similarityThreshold <= 1 &&
+    Number.isInteger(diagnostic.candidateCount) && diagnostic.candidateCount >= 0 && diagnostic.candidateCount <= diagnostic.topK &&
+    Number.isInteger(diagnostic.acceptedCount) && diagnostic.acceptedCount === data.sources.length &&
+    Number.isInteger(diagnostic.rejectedCount) && diagnostic.rejectedCount >= 0 &&
+    diagnostic.acceptedCount + diagnostic.rejectedCount === diagnostic.candidateCount &&
+    Number.isSafeInteger(diagnostic.elapsedMs) && diagnostic.elapsedMs >= 0 &&
+    typeof data.modelCalled === "boolean" && data.modelCalled === (data.sources.length > 0) &&
+    Array.isArray(diagnostic.candidates) && diagnostic.candidates.length === diagnostic.candidateCount &&
+    diagnostic.candidates.every((candidate) =>
+      candidate && typeof candidate.chunkId === "string" &&
+      (candidate.source === null || typeof candidate.source === "string") &&
+      Number.isFinite(candidate.score) && typeof candidate.accepted === "boolean" &&
+      reasons.includes(candidate.reason) && candidate.accepted === (candidate.reason === "ACCEPTED") &&
+      (!candidate.accepted || candidate.score >= diagnostic.similarityThreshold)) &&
+    diagnostic.candidates.filter((candidate) => candidate.accepted).length === diagnostic.acceptedCount &&
+    data.sources.every((source) => diagnostic.candidates.some((candidate) => candidate.accepted && candidate.chunkId === source.chunkId));
+}
+
+function renderRetrievalDiagnostics(body, diagnostic, modelCalled) {
+  const details = document.createElement("details");
+  details.className = "sources retrieval-diagnostics";
+  const summary = document.createElement("summary");
+  summary.textContent = `检索诊断 · 保留 ${diagnostic.acceptedCount}/${diagnostic.candidateCount} 条 · ${modelCalled ? "已调用 DeepSeek" : "未调用 DeepSeek"}`;
+  const overview = document.createElement("p");
+  overview.className = "source-meta";
+  overview.textContent = `候选上限 ${diagnostic.topK} · 相似度阈值 ≥ ${diagnostic.similarityThreshold} · 过滤 ${diagnostic.rejectedCount} 条 · 检索耗时 ${diagnostic.elapsedMs} ms`;
+  const note = document.createElement("p");
+  note.className = "sources-note";
+  note.textContent = "相似度不是正确率。候选数量仅指本次 top-K 结果，不是全库相关文档总数；耗时包含向量化与检索，不含 DeepSeek 生成。达到阈值仍不保证资料有答案。";
+  details.append(summary, overview, note);
+  const reasons = { ACCEPTED: "保留", BELOW_THRESHOLD: "低于阈值", EMPTY_TEXT: "空文本" };
+  diagnostic.candidates.forEach((candidate) => {
+    const item = document.createElement("p");
+    item.className = "source-meta retrieval-candidate";
+    item.dataset.accepted = String(candidate.accepted);
+    item.textContent = `${reasons[candidate.reason]} · 相似度 ${candidate.score.toFixed(4)} · ${candidate.source ?? "未命名来源"}\n分块 ID：${candidate.chunkId}`;
+    details.append(item);
+  });
+  if (!diagnostic.candidateCount) {
+    const empty = document.createElement("p");
+    empty.className = "sources-note";
+    empty.textContent = "本次向量检索没有返回候选资料。";
+    details.append(empty);
+  }
   body.append(details);
 }
 
@@ -209,8 +261,14 @@ async function send(message, mode, failedRow) {
       typeof source.chunkId === "string" && typeof source.text === "string"))) {
       throw new Error("服务返回的引用来源格式不正确，请重试。");
     }
+    if (mode === "rag" && !validRetrievalDiagnostics(data)) {
+      throw new Error("检索诊断格式异常，请确认后端已更新并重启，不要将此结果当作有效回答。");
+    }
     pending.bubble.textContent = reply;
-    if (mode === "rag") renderSources(pending.body, data.sources);
+    if (mode === "rag") {
+      renderRetrievalDiagnostics(pending.body, data.diagnostics, data.modelCalled);
+      renderSources(pending.body, data.sources);
+    }
     status.textContent = "回复已收到";
   } catch (error) {
     pending.row.classList.add("failed");

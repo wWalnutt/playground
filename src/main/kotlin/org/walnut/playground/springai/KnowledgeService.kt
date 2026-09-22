@@ -3,8 +3,6 @@ package org.walnut.playground.springai
 import org.springframework.ai.document.Document
 import org.springframework.ai.embedding.EmbeddingModel
 import org.springframework.ai.transformer.splitter.TokenTextSplitter
-import org.springframework.ai.vectorstore.SearchRequest
-import org.springframework.ai.vectorstore.VectorStore
 import org.springframework.context.annotation.Profile
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -19,7 +17,7 @@ import java.util.UUID
 @Profile("vectors")
 class KnowledgeService(
     private val embeddingModel: EmbeddingModel,
-    private val vectorStore: VectorStore,
+    private val retrievalService: KnowledgeRetrievalService,
     private val documents: KnowledgeDocumentRepository,
 ) {
     private val splitter = TokenTextSplitter.builder()
@@ -100,17 +98,10 @@ class KnowledgeService(
         return UUID.fromString(value)
     }
 
-    fun search(request: KnowledgeSearchRequest): List<KnowledgeMatch> {
-        validateText(request.query, 2000)
-        if (request.topK !in 1..20) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "topK must be between 1 and 20")
-        }
-        return vectorStore.similaritySearch(
-            SearchRequest.builder().query(request.query).topK(request.topK).build(),
-        ).map { document ->
-            KnowledgeMatch(document.id, document.text, document.metadata, document.score)
-        }
-    }
+    fun search(request: KnowledgeSearchRequest): List<KnowledgeMatch> = searchWithDiagnostics(request).matches
+
+    fun searchWithDiagnostics(request: KnowledgeSearchRequest): KnowledgeSearchResponse =
+        retrievalService.retrieve(request)
 
     private fun validateText(text: String, maxLength: Int) {
         if (text.isBlank() || text.length > maxLength) {
