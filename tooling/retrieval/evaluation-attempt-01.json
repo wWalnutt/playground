@@ -1,0 +1,2779 @@
+{
+  "version": 1,
+  "generatedAt": "2026-09-21T09:40:14.820Z",
+  "baseUrl": "http://localhost:8080",
+  "model": "bge-m3",
+  "datasetSha256": "a62389b4b9f021f53e245fea12703f074cbfc8f79c19f70680bd3923e3884cfa",
+  "corpus": {
+    "documentCount": 84,
+    "chunkCount": 81,
+    "sha256": "09e6e0d30cc8dfb1de90b57363c8f0304b9679c7362772beb7d80d2402eee0db"
+  },
+  "topK": 3,
+  "selectedThreshold": 0.55,
+  "selectionPolicy": "Calibration only: minimize false accepts while preserving baseline source recall, hit count, full evidence count and false rejects; ties choose the lowest threshold. Validation never tunes the threshold.",
+  "demonstratedImprovement": false,
+  "limitations": "Small manually authored dataset; source relevance, not generated-answer correctness. High semantic similarity cannot establish answerability. Network timings are single-run observations, not performance benchmarks. No model generation was invoked.",
+  "metrics": {
+    "calibration": {
+      "baseline": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      },
+      "selected": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 2,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.3333333333333333,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 2,
+        "acceptedChunks": 40
+      }
+    },
+    "validation": {
+      "baseline": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 14,
+        "fullEvidenceCount": 13,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 15,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 1,
+        "sourceRecall": 0.9375,
+        "fullEvidenceRate": 0.9285714285714286,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      },
+      "selected": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 13,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 14,
+        "falseRejectCount": 1,
+        "falseAcceptCount": 1,
+        "hitRate": 0.9285714285714286,
+        "sourceRecall": 0.875,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0.07142857142857142,
+        "falseAcceptRate": 0.16666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 1,
+        "acceptedChunks": 30
+      }
+    }
+  },
+  "calibrationGrid": [
+    {
+      "threshold": 0,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.2,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.21,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.22,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.23,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.24,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.25,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.26,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.27,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.28,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.29,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.3,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 60
+      }
+    },
+    {
+      "threshold": 0.31,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 59
+      }
+    },
+    {
+      "threshold": 0.32,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 6,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 1,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 3,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 59
+      }
+    },
+    {
+      "threshold": 0.33,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 5,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.8333333333333334,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 2,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 55
+      }
+    },
+    {
+      "threshold": 0.34,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 5,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.8333333333333334,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 2,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 55
+      }
+    },
+    {
+      "threshold": 0.35,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 4,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.6666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 1,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 54
+      }
+    },
+    {
+      "threshold": 0.36,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 4,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.6666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 1,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 53
+      }
+    },
+    {
+      "threshold": 0.37,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 4,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.6666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 1,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 52
+      }
+    },
+    {
+      "threshold": 0.38,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 4,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.6666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 1,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 52
+      }
+    },
+    {
+      "threshold": 0.39,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.4,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.41,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.42,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.43,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.44,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.45,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.46,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.47,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 51
+      }
+    },
+    {
+      "threshold": 0.48,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 50
+      }
+    },
+    {
+      "threshold": 0.49,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 48
+      }
+    },
+    {
+      "threshold": 0.5,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 48
+      }
+    },
+    {
+      "threshold": 0.51,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 46
+      }
+    },
+    {
+      "threshold": 0.52,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 45
+      }
+    },
+    {
+      "threshold": 0.53,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 44
+      }
+    },
+    {
+      "threshold": 0.54,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 3,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.5,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 3,
+        "acceptedChunks": 42
+      }
+    },
+    {
+      "threshold": 0.55,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 2,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.3333333333333333,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 2,
+        "acceptedChunks": 40
+      }
+    },
+    {
+      "threshold": 0.56,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 12,
+        "fullEvidenceCount": 12,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 13,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 2,
+        "hitRate": 0.8571428571428571,
+        "sourceRecall": 0.8125,
+        "fullEvidenceRate": 0.8571428571428571,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.3333333333333333,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 2,
+        "acceptedChunks": 39
+      }
+    },
+    {
+      "threshold": 0.57,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 11,
+        "fullEvidenceCount": 11,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 12,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 1,
+        "hitRate": 0.7857142857142857,
+        "sourceRecall": 0.75,
+        "fullEvidenceRate": 0.7857142857142857,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.16666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 1,
+        "acceptedChunks": 34
+      }
+    },
+    {
+      "threshold": 0.58,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 11,
+        "fullEvidenceCount": 11,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 12,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 1,
+        "hitRate": 0.7857142857142857,
+        "sourceRecall": 0.75,
+        "fullEvidenceRate": 0.7857142857142857,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.16666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 1,
+        "acceptedChunks": 33
+      }
+    },
+    {
+      "threshold": 0.59,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 10,
+        "fullEvidenceCount": 10,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 11,
+        "falseRejectCount": 0,
+        "falseAcceptCount": 1,
+        "hitRate": 0.7142857142857143,
+        "sourceRecall": 0.6875,
+        "fullEvidenceRate": 0.7142857142857143,
+        "falseRejectRate": 0,
+        "falseAcceptRate": 0.16666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 1,
+        "acceptedChunks": 31
+      }
+    },
+    {
+      "threshold": 0.6,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 10,
+        "fullEvidenceCount": 9,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 10,
+        "falseRejectCount": 2,
+        "falseAcceptCount": 1,
+        "hitRate": 0.7142857142857143,
+        "sourceRecall": 0.625,
+        "fullEvidenceRate": 0.6428571428571429,
+        "falseRejectRate": 0.14285714285714285,
+        "falseAcceptRate": 0.16666666666666666,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 1,
+        "acceptedChunks": 26
+      }
+    },
+    {
+      "threshold": 0.61,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 9,
+        "fullEvidenceCount": 8,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 9,
+        "falseRejectCount": 3,
+        "falseAcceptCount": 0,
+        "hitRate": 0.6428571428571429,
+        "sourceRecall": 0.5625,
+        "fullEvidenceRate": 0.5714285714285714,
+        "falseRejectRate": 0.21428571428571427,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 22
+      }
+    },
+    {
+      "threshold": 0.62,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 9,
+        "fullEvidenceCount": 8,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 9,
+        "falseRejectCount": 3,
+        "falseAcceptCount": 0,
+        "hitRate": 0.6428571428571429,
+        "sourceRecall": 0.5625,
+        "fullEvidenceRate": 0.5714285714285714,
+        "falseRejectRate": 0.21428571428571427,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 19
+      }
+    },
+    {
+      "threshold": 0.63,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 9,
+        "fullEvidenceCount": 8,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 9,
+        "falseRejectCount": 3,
+        "falseAcceptCount": 0,
+        "hitRate": 0.6428571428571429,
+        "sourceRecall": 0.5625,
+        "fullEvidenceRate": 0.5714285714285714,
+        "falseRejectRate": 0.21428571428571427,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 16
+      }
+    },
+    {
+      "threshold": 0.64,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 8,
+        "fullEvidenceCount": 7,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 8,
+        "falseRejectCount": 4,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5714285714285714,
+        "sourceRecall": 0.5,
+        "fullEvidenceRate": 0.5,
+        "falseRejectRate": 0.2857142857142857,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 14
+      }
+    },
+    {
+      "threshold": 0.65,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 8,
+        "fullEvidenceCount": 7,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 8,
+        "falseRejectCount": 4,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5714285714285714,
+        "sourceRecall": 0.5,
+        "fullEvidenceRate": 0.5,
+        "falseRejectRate": 0.2857142857142857,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 12
+      }
+    },
+    {
+      "threshold": 0.66,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 8,
+        "fullEvidenceCount": 7,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 8,
+        "falseRejectCount": 4,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5714285714285714,
+        "sourceRecall": 0.5,
+        "fullEvidenceRate": 0.5,
+        "falseRejectRate": 0.2857142857142857,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 11
+      }
+    },
+    {
+      "threshold": 0.67,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 7,
+        "fullEvidenceCount": 6,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 7,
+        "falseRejectCount": 6,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5,
+        "sourceRecall": 0.4375,
+        "fullEvidenceRate": 0.42857142857142855,
+        "falseRejectRate": 0.42857142857142855,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 9
+      }
+    },
+    {
+      "threshold": 0.68,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 7,
+        "fullEvidenceCount": 6,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 7,
+        "falseRejectCount": 7,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5,
+        "sourceRecall": 0.4375,
+        "fullEvidenceRate": 0.42857142857142855,
+        "falseRejectRate": 0.5,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 7
+      }
+    },
+    {
+      "threshold": 0.69,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 7,
+        "fullEvidenceCount": 6,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 7,
+        "falseRejectCount": 7,
+        "falseAcceptCount": 0,
+        "hitRate": 0.5,
+        "sourceRecall": 0.4375,
+        "fullEvidenceRate": 0.42857142857142855,
+        "falseRejectRate": 0.5,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 7
+      }
+    },
+    {
+      "threshold": 0.7,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 5,
+        "fullEvidenceCount": 4,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 5,
+        "falseRejectCount": 9,
+        "falseAcceptCount": 0,
+        "hitRate": 0.35714285714285715,
+        "sourceRecall": 0.3125,
+        "fullEvidenceRate": 0.2857142857142857,
+        "falseRejectRate": 0.6428571428571429,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 5
+      }
+    },
+    {
+      "threshold": 0.71,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 4,
+        "fullEvidenceCount": 3,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 4,
+        "falseRejectCount": 10,
+        "falseAcceptCount": 0,
+        "hitRate": 0.2857142857142857,
+        "sourceRecall": 0.25,
+        "fullEvidenceRate": 0.21428571428571427,
+        "falseRejectRate": 0.7142857142857143,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 4
+      }
+    },
+    {
+      "threshold": 0.72,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 3,
+        "fullEvidenceCount": 3,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 3,
+        "falseRejectCount": 11,
+        "falseAcceptCount": 0,
+        "hitRate": 0.21428571428571427,
+        "sourceRecall": 0.1875,
+        "fullEvidenceRate": 0.21428571428571427,
+        "falseRejectRate": 0.7857142857142857,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 3
+      }
+    },
+    {
+      "threshold": 0.73,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 2,
+        "fullEvidenceCount": 2,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 2,
+        "falseRejectCount": 12,
+        "falseAcceptCount": 0,
+        "hitRate": 0.14285714285714285,
+        "sourceRecall": 0.125,
+        "fullEvidenceRate": 0.14285714285714285,
+        "falseRejectRate": 0.8571428571428571,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 2
+      }
+    },
+    {
+      "threshold": 0.74,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 2,
+        "fullEvidenceCount": 2,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 2,
+        "falseRejectCount": 12,
+        "falseAcceptCount": 0,
+        "hitRate": 0.14285714285714285,
+        "sourceRecall": 0.125,
+        "fullEvidenceRate": 0.14285714285714285,
+        "falseRejectRate": 0.8571428571428571,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 2
+      }
+    },
+    {
+      "threshold": 0.75,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 1,
+        "fullEvidenceCount": 1,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 1,
+        "falseRejectCount": 13,
+        "falseAcceptCount": 0,
+        "hitRate": 0.07142857142857142,
+        "sourceRecall": 0.0625,
+        "fullEvidenceRate": 0.07142857142857142,
+        "falseRejectRate": 0.9285714285714286,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 1
+      }
+    },
+    {
+      "threshold": 0.76,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 0,
+        "fullEvidenceCount": 0,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 0,
+        "falseRejectCount": 14,
+        "falseAcceptCount": 0,
+        "hitRate": 0,
+        "sourceRecall": 0,
+        "fullEvidenceRate": 0,
+        "falseRejectRate": 1,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 0
+      }
+    },
+    {
+      "threshold": 0.77,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 0,
+        "fullEvidenceCount": 0,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 0,
+        "falseRejectCount": 14,
+        "falseAcceptCount": 0,
+        "hitRate": 0,
+        "sourceRecall": 0,
+        "fullEvidenceRate": 0,
+        "falseRejectRate": 1,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 0
+      }
+    },
+    {
+      "threshold": 0.78,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 0,
+        "fullEvidenceCount": 0,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 0,
+        "falseRejectCount": 14,
+        "falseAcceptCount": 0,
+        "hitRate": 0,
+        "sourceRecall": 0,
+        "fullEvidenceRate": 0,
+        "falseRejectRate": 1,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 0
+      }
+    },
+    {
+      "threshold": 0.79,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 0,
+        "fullEvidenceCount": 0,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 0,
+        "falseRejectCount": 14,
+        "falseAcceptCount": 0,
+        "hitRate": 0,
+        "sourceRecall": 0,
+        "fullEvidenceRate": 0,
+        "falseRejectRate": 1,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 0
+      }
+    },
+    {
+      "threshold": 0.8,
+      "metrics": {
+        "caseCount": 20,
+        "positiveCount": 14,
+        "negativeCount": 6,
+        "hitCount": 0,
+        "fullEvidenceCount": 0,
+        "expectedSourceCount": 16,
+        "foundSourceCount": 0,
+        "falseRejectCount": 14,
+        "falseAcceptCount": 0,
+        "hitRate": 0,
+        "sourceRecall": 0,
+        "fullEvidenceRate": 0,
+        "falseRejectRate": 1,
+        "falseAcceptRate": 0,
+        "unrelatedCount": 3,
+        "unrelatedAccepted": 0,
+        "nearMissingCount": 3,
+        "nearMissingAccepted": 0,
+        "acceptedChunks": 0
+      }
+    }
+  ],
+  "samples": [
+    {
+      "id": "c01",
+      "split": "calibration",
+      "category": "direct",
+      "query": "Kotlin 的 async 是调用 await 后才开始执行吗？",
+      "expectedSources": [
+        "Kotlin 协程：launch 与 async 的区别"
+      ],
+      "elapsedMs": 68,
+      "candidates": [
+        {
+          "chunkId": "afe649f9-80a5-4571-a777-06fc39ad91e0",
+          "source": "Kotlin 协程：launch 与 async 的区别",
+          "score": 0.6994984447956085,
+          "usable": true
+        },
+        {
+          "chunkId": "d1d7bdb0-ba5e-4251-865c-150b063b5dd5",
+          "source": "Spring Async：异步执行不自动继承事务",
+          "score": 0.6094631254673004,
+          "usable": true
+        },
+        {
+          "chunkId": "f463ad9f-5107-46ab-bf03-c445176c207a",
+          "source": "Spring 事务：@Transactional 与同类方法调用",
+          "score": 0.5834147036075592,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c02",
+      "split": "calibration",
+      "category": "paraphrase",
+      "query": "变量声明成 val，里面的列表就不能再改了吗？",
+      "expectedSources": [
+        "Kotlin 集合：只读接口不等于不可变对象"
+      ],
+      "elapsedMs": 39,
+      "candidates": [
+        {
+          "chunkId": "fb8b834f-e3ce-4e3f-b5c8-9d064732199a",
+          "source": "Kotlin 泛型型变：out、in 与星投影",
+          "score": 0.5902108550071716,
+          "usable": true
+        },
+        {
+          "chunkId": "1fe6e102-bc73-467c-ad54-63e2c12208bd",
+          "source": "Kotlin 集合：只读接口不等于不可变对象",
+          "score": 0.5662002265453339,
+          "usable": true
+        },
+        {
+          "chunkId": "8d7e8a2e-da5b-4a4b-8725-defb5134f33a",
+          "source": "Spring Cacheable：缓存键与代理调用边界",
+          "score": 0.5594364404678345,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c03",
+      "split": "calibration",
+      "category": "direct",
+      "query": "Kafka 主题只有6个分区，启动8个消费者能加速吗？",
+      "expectedSources": [
+        "Kafka 消费者组：分区数量决定消费并行度"
+      ],
+      "elapsedMs": 39,
+      "candidates": [
+        {
+          "chunkId": "6a949343-ffee-4366-b562-dd088974a6ae",
+          "source": "Kafka 消费者组：分区数量决定消费并行度",
+          "score": 0.7444742619991302,
+          "usable": true
+        },
+        {
+          "chunkId": "9e692568-a24c-41ab-be6e-2a9ec971dbfa",
+          "source": "Kafka 大消息：多层大小限制与对象存储方案",
+          "score": 0.6056877672672272,
+          "usable": true
+        },
+        {
+          "chunkId": "10f49059-20bd-4c90-afad-40f89687340d",
+          "source": "Kafka read_committed：事务消息可见性",
+          "score": 0.560867428779602,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c04",
+      "split": "calibration",
+      "category": "paraphrase",
+      "query": "消息已经写进数据库，提交消费进度前进程挂了，会不会重复处理？",
+      "expectedSources": [
+        "Kafka Offset：提交位置与重复消费"
+      ],
+      "elapsedMs": 45,
+      "candidates": [
+        {
+          "chunkId": "5bafb6ae-522f-4353-9fd4-b2802293c3cc",
+          "source": "Kafka Offset：提交位置与重复消费",
+          "score": 0.6901629567146301,
+          "usable": true
+        },
+        {
+          "chunkId": "5b6770f5-8ba1-4598-9d6a-b4bbe6cfd881",
+          "source": "Kafka 重试与死信：顺序、幂等性和恢复",
+          "score": 0.6738049685955048,
+          "usable": true
+        },
+        {
+          "chunkId": "56c5f23a-6599-4a24-9e49-0b52a8117b8b",
+          "source": "事务发件箱 Outbox：数据库与消息的一致性",
+          "score": 0.6431564688682556,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c05",
+      "split": "calibration",
+      "category": "direct",
+      "query": "PostgreSQL 联合索引没有第一列的条件就一定不会走索引吗？",
+      "expectedSources": [
+        "PostgreSQL 联合索引：最左列不是绝对限制"
+      ],
+      "elapsedMs": 44,
+      "candidates": [
+        {
+          "chunkId": "f6a83756-288a-4de9-a66b-42b7db668c80",
+          "source": "PostgreSQL 联合索引：最左列不是绝对限制",
+          "score": 0.7021270096302032,
+          "usable": true
+        },
+        {
+          "chunkId": "6cd32d2c-3e57-4c39-8b42-8e4df8bcabd2",
+          "source": "PostgreSQL INCLUDE：覆盖索引与可见性检查",
+          "score": 0.6199942827224731,
+          "usable": true
+        },
+        {
+          "chunkId": "e0386b47-10b1-4150-ad1e-7d96d8fefad1",
+          "source": "PostgreSQL 部分索引：只索引满足条件的行",
+          "score": 0.5695628821849823,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c06",
+      "split": "calibration",
+      "category": "paraphrase",
+      "query": "订单列表翻到很后面的页特别慢，有什么办法避免跳过前面几十万条？",
+      "expectedSources": [
+        "PostgreSQL 分页：OFFSET 与游标分页"
+      ],
+      "elapsedMs": 45,
+      "candidates": [
+        {
+          "chunkId": "81c6ef70-7197-4a11-95d8-aa996c8ad0e1",
+          "source": "PostgreSQL 分页：OFFSET 与游标分页",
+          "score": 0.6036242842674255,
+          "usable": true
+        },
+        {
+          "chunkId": "f6a83756-288a-4de9-a66b-42b7db668c80",
+          "source": "PostgreSQL 联合索引：最左列不是绝对限制",
+          "score": 0.5904153883457184,
+          "usable": true
+        },
+        {
+          "chunkId": "a23e0a3b-4d40-49da-81e7-40a4cc164d48",
+          "source": "JPA N+1 查询：关联加载与分页的陷阱",
+          "score": 0.5903823971748352,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c07",
+      "split": "calibration",
+      "category": "direct",
+      "query": "Spring 的单例 Bean 是否天然线程安全？",
+      "expectedSources": [
+        "Spring Bean：单例作用域与线程安全"
+      ],
+      "elapsedMs": 36,
+      "candidates": [
+        {
+          "chunkId": "5b9d9802-4047-4cd1-868e-1f639016b2b8",
+          "source": "Spring Bean：单例作用域与线程安全",
+          "score": 0.6308296620845795,
+          "usable": true
+        },
+        {
+          "chunkId": "04cafe20-38c3-4197-8218-ebbcbfc32b05",
+          "source": "Spring MVC 参数校验：结构解析与业务验证",
+          "score": 0.5628807544708252,
+          "usable": true
+        },
+        {
+          "chunkId": "f463ad9f-5107-46ab-bf03-c445176c207a",
+          "source": "Spring 事务：@Transactional 与同类方法调用",
+          "score": 0.5068041384220123,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c08",
+      "split": "calibration",
+      "category": "paraphrase",
+      "query": "数据库修改成功了但是消息没发出去，怎么保证以后还能补发？",
+      "expectedSources": [
+        "事务发件箱 Outbox：数据库与消息的一致性"
+      ],
+      "elapsedMs": 40,
+      "candidates": [
+        {
+          "chunkId": "56c5f23a-6599-4a24-9e49-0b52a8117b8b",
+          "source": "事务发件箱 Outbox：数据库与消息的一致性",
+          "score": 0.6602548360824585,
+          "usable": true
+        },
+        {
+          "chunkId": "5bafb6ae-522f-4353-9fd4-b2802293c3cc",
+          "source": "Kafka Offset：提交位置与重复消费",
+          "score": 0.626213401556015,
+          "usable": true
+        },
+        {
+          "chunkId": "8f7be39f-cbaf-4855-93b8-c1234fb562c7",
+          "source": "Spring 事务事件：AFTER_COMMIT 与可靠通知",
+          "score": 0.6209421455860138,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c09",
+      "split": "calibration",
+      "category": "direct",
+      "query": "Redis Pipeline 能保证整个批次失败时全部回滚吗？",
+      "expectedSources": [
+        "Redis Pipeline：减少往返但不提供事务隔离"
+      ],
+      "elapsedMs": 40,
+      "candidates": [
+        {
+          "chunkId": "967b6e1b-c8ac-4483-a4b1-8f3c5ae9db46",
+          "source": "Redis Lua：原子执行与脚本失败语义",
+          "score": 0.5957723557949066,
+          "usable": true
+        },
+        {
+          "chunkId": "7ee5fa83-79b1-4907-bccc-e08d73c9504c",
+          "source": "Redis Pipeline：减少往返但不提供事务隔离",
+          "score": 0.589046448469162,
+          "usable": true
+        },
+        {
+          "chunkId": "a4b5dac7-c33e-48ed-9b6a-c8b665b14ce9",
+          "source": "接口限流：令牌桶、漏桶与分布式计数",
+          "score": 0.5796723663806915,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c10",
+      "split": "calibration",
+      "category": "paraphrase",
+      "query": "创建订单的 HTTP 请求超时了，直接换个请求标识重试安全吗？",
+      "expectedSources": [
+        "HTTP 接口幂等性：重试与 Idempotency-Key"
+      ],
+      "elapsedMs": 45,
+      "candidates": [
+        {
+          "chunkId": "3d8c97de-bb65-4d55-b623-88fc0388ec94",
+          "source": "HTTP 客户端超时：连接、读取与总时间预算",
+          "score": 0.6651664078235626,
+          "usable": true
+        },
+        {
+          "chunkId": "bbfbfbd3-5f9e-40a9-8a5f-a4c8e2c64307",
+          "source": "HTTP 重试：指数退避、抖动与重试放大",
+          "score": 0.6332623064517975,
+          "usable": true
+        },
+        {
+          "chunkId": "5a0aa7ec-6f81-4aab-86ae-4b299ceb0bd5",
+          "source": "HTTP 连接复用：连接池、响应体与协议差异",
+          "score": 0.611519068479538,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c11",
+      "split": "calibration",
+      "category": "direct",
+      "query": "JVM 的 Xmx 是不是 Java 进程的全部内存上限？",
+      "expectedSources": [
+        "JVM 内存：堆、元空间与直接内存"
+      ],
+      "elapsedMs": 40,
+      "candidates": [
+        {
+          "chunkId": "9121a1b3-549a-457a-b548-1fbf511b6990",
+          "source": "JVM 内存：堆、元空间与直接内存",
+          "score": 0.7569825798273087,
+          "usable": true
+        },
+        {
+          "chunkId": "15b67ff9-09a6-4863-9a97-7982a9fff335",
+          "source": "Redis 过期与淘汰：TTL 不等于容量策略",
+          "score": 0.5402360558509827,
+          "usable": true
+        },
+        {
+          "chunkId": "a0a56b26-316f-44ef-9b90-f58da2893460",
+          "source": "JVM GC：暂停时间与吞吐量的权衡",
+          "score": 0.5290108323097229,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c12",
+      "split": "calibration",
+      "category": "direct",
+      "query": "PostgreSQL 给外键列自动建索引吗？",
+      "expectedSources": [
+        "PostgreSQL 外键：引用完整性与索引责任"
+      ],
+      "elapsedMs": 35,
+      "candidates": [
+        {
+          "chunkId": "45a7efd1-4477-4d97-b742-7d73cb418d41",
+          "source": "PostgreSQL 外键：引用完整性与索引责任",
+          "score": 0.726305216550827,
+          "usable": true
+        },
+        {
+          "chunkId": "f6a83756-288a-4de9-a66b-42b7db668c80",
+          "source": "PostgreSQL 联合索引：最左列不是绝对限制",
+          "score": 0.6208259165287018,
+          "usable": true
+        },
+        {
+          "chunkId": "6cd32d2c-3e57-4c39-8b42-8e4df8bcabd2",
+          "source": "PostgreSQL INCLUDE：覆盖索引与可见性检查",
+          "score": 0.6139581203460693,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c13",
+      "split": "calibration",
+      "category": "multi_source",
+      "query": "Kafka 消费者和生产者怎么配合，避免消费数据库写入重复以及发送协议重试重复？",
+      "expectedSources": [
+        "Kafka Offset：提交位置与重复消费",
+        "Kafka Producer：acks、重试与幂等性"
+      ],
+      "elapsedMs": 46,
+      "candidates": [
+        {
+          "chunkId": "6a949343-ffee-4366-b562-dd088974a6ae",
+          "source": "Kafka 消费者组：分区数量决定消费并行度",
+          "score": 0.6715396344661713,
+          "usable": true
+        },
+        {
+          "chunkId": "9e692568-a24c-41ab-be6e-2a9ec971dbfa",
+          "source": "Kafka 大消息：多层大小限制与对象存储方案",
+          "score": 0.655769944190979,
+          "usable": true
+        },
+        {
+          "chunkId": "5b6770f5-8ba1-4598-9d6a-b4bbe6cfd881",
+          "source": "Kafka 重试与死信：顺序、幂等性和恢复",
+          "score": 0.6436724960803986,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c14",
+      "split": "calibration",
+      "category": "multi_source",
+      "query": "Redis Pipeline 和 Lua 脚本在原子执行与错误回滚方面分别有什么限制？",
+      "expectedSources": [
+        "Redis Pipeline：减少往返但不提供事务隔离",
+        "Redis Lua：原子执行与脚本失败语义"
+      ],
+      "elapsedMs": 50,
+      "candidates": [
+        {
+          "chunkId": "967b6e1b-c8ac-4483-a4b1-8f3c5ae9db46",
+          "source": "Redis Lua：原子执行与脚本失败语义",
+          "score": 0.7176682353019714,
+          "usable": true
+        },
+        {
+          "chunkId": "7ee5fa83-79b1-4907-bccc-e08d73c9504c",
+          "source": "Redis Pipeline：减少往返但不提供事务隔离",
+          "score": 0.5935471951961517,
+          "usable": true
+        },
+        {
+          "chunkId": "83813b0f-74dd-4623-b94f-df5b8a0cb14c",
+          "source": "Redis Cluster：哈希槽与多键操作",
+          "score": 0.537511020898819,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c15",
+      "split": "calibration",
+      "category": "near_missing",
+      "query": "Kafka Java 客户端 3.7.0 的 max.poll.interval.ms 默认值是多少毫秒？",
+      "expectedSources": [],
+      "elapsedMs": 52,
+      "candidates": [
+        {
+          "chunkId": "9e692568-a24c-41ab-be6e-2a9ec971dbfa",
+          "source": "Kafka 大消息：多层大小限制与对象存储方案",
+          "score": 0.5660275220870972,
+          "usable": true
+        },
+        {
+          "chunkId": "b836d88e-560b-4225-b262-23987e863fa5",
+          "source": "Kafka 消费者再均衡：触发原因与处理风险",
+          "score": 0.5385513007640839,
+          "usable": true
+        },
+        {
+          "chunkId": "6a949343-ffee-4366-b562-dd088974a6ae",
+          "source": "Kafka 消费者组：分区数量决定消费并行度",
+          "score": 0.5104423761367798,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c16",
+      "split": "calibration",
+      "category": "near_missing",
+      "query": "PostgreSQL 16 默认的 autovacuum_vacuum_scale_factor 数值是多少？",
+      "expectedSources": [],
+      "elapsedMs": 51,
+      "candidates": [
+        {
+          "chunkId": "a0c64572-68df-42a6-87ae-a34156aa84da",
+          "source": "PostgreSQL VACUUM：死元组与长事务",
+          "score": 0.6050732135772705,
+          "usable": true
+        },
+        {
+          "chunkId": "b4ee93f5-d712-4051-9e5d-994bfb4405ab",
+          "source": "Kafka Tombstone：压缩主题中的删除标记",
+          "score": 0.4806685447692871,
+          "usable": true
+        },
+        {
+          "chunkId": "054b80c1-5146-4be2-854a-7a124c850609",
+          "source": "PostgreSQL NULL：三值逻辑与唯一约束",
+          "score": 0.47665196657180786,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c17",
+      "split": "calibration",
+      "category": "near_missing",
+      "query": "请给出本项目生产 Redis 集群所有节点的实际 IP 地址和端口。",
+      "expectedSources": [],
+      "elapsedMs": 45,
+      "candidates": [
+        {
+          "chunkId": "83813b0f-74dd-4623-b94f-df5b8a0cb14c",
+          "source": "Redis Cluster：哈希槽与多键操作",
+          "score": 0.5459518134593964,
+          "usable": true
+        },
+        {
+          "chunkId": "a4b5dac7-c33e-48ed-9b6a-c8b665b14ce9",
+          "source": "接口限流：令牌桶、漏桶与分布式计数",
+          "score": 0.5043226480484009,
+          "usable": true
+        },
+        {
+          "chunkId": "c0fee998-acb1-47de-aaef-75ae3a29ebe0",
+          "source": "Redis 分布式锁：租约、释放校验与 Fencing Token",
+          "score": 0.4886239171028137,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c18",
+      "split": "calibration",
+      "category": "unrelated",
+      "query": "红烧茄子怎么做，需要哪些调料？",
+      "expectedSources": [],
+      "elapsedMs": 33,
+      "candidates": [
+        {
+          "chunkId": "6ab26114-f3ee-488d-8b35-5217402440bd",
+          "source": "Redis 数据结构：按访问模式选择类型",
+          "score": 0.34523099660873413,
+          "usable": true
+        },
+        {
+          "chunkId": "cdbe7202-80da-4cf8-8c47-4350d51f89d5",
+          "source": "PostgreSQL 行锁：SELECT FOR UPDATE 与死锁",
+          "score": 0.32904309034347534,
+          "usable": true
+        },
+        {
+          "chunkId": "f463ad9f-5107-46ab-bf03-c445176c207a",
+          "source": "Spring 事务：@Transactional 与同类方法调用",
+          "score": 0.3246570825576782,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c19",
+      "split": "calibration",
+      "category": "unrelated",
+      "query": "火星的两颗卫星分别叫什么名字？",
+      "expectedSources": [],
+      "elapsedMs": 33,
+      "candidates": [
+        {
+          "chunkId": "bfd59983-ca0c-48bd-a5c5-31f7468589d4",
+          "source": "服务熔断：与超时、重试和隔离的区别",
+          "score": 0.3229437470436096,
+          "usable": true
+        },
+        {
+          "chunkId": "fb8b834f-e3ce-4e3f-b5c8-9d064732199a",
+          "source": "Kotlin 泛型型变：out、in 与星投影",
+          "score": 0.3203689455986023,
+          "usable": true
+        },
+        {
+          "chunkId": "56c5f23a-6599-4a24-9e49-0b52a8117b8b",
+          "source": "事务发件箱 Outbox：数据库与消息的一致性",
+          "score": 0.3091891407966614,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "c20",
+      "split": "calibration",
+      "category": "unrelated",
+      "query": "如何给阳台上的薄荷浇水和施肥？",
+      "expectedSources": [],
+      "elapsedMs": 35,
+      "candidates": [
+        {
+          "chunkId": "a98a2777-3444-4a76-912c-6d3899b01fb8",
+          "source": "Kotlin Flow：冷流、StateFlow 与 SharedFlow",
+          "score": 0.38185036182403564,
+          "usable": true
+        },
+        {
+          "chunkId": "5a0aa7ec-6f81-4aab-86ae-4b299ceb0bd5",
+          "source": "HTTP 连接复用：连接池、响应体与协议差异",
+          "score": 0.3611496090888977,
+          "usable": true
+        },
+        {
+          "chunkId": "a4b5dac7-c33e-48ed-9b6a-c8b665b14ce9",
+          "source": "接口限流：令牌桶、漏桶与分布式计数",
+          "score": 0.35818803310394287,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v01",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "用 data class 的 copy 复制对象后，修改内部可变列表会影响原对象吗？",
+      "expectedSources": [
+        "Kotlin 数据类：copy、相等性与可变属性"
+      ],
+      "elapsedMs": 48,
+      "candidates": [
+        {
+          "chunkId": "c6ba1c9f-93f3-4014-b04d-be3c80a4c336",
+          "source": "Kotlin 数据类：copy、相等性与可变属性",
+          "score": 0.6790164113044739,
+          "usable": true
+        },
+        {
+          "chunkId": "1fe6e102-bc73-467c-ad54-63e2c12208bd",
+          "source": "Kotlin 集合：只读接口不等于不可变对象",
+          "score": 0.5952305197715759,
+          "usable": true
+        },
+        {
+          "chunkId": "fb8b834f-e3ce-4e3f-b5c8-9d064732199a",
+          "source": "Kotlin 泛型型变：out、in 与星投影",
+          "score": 0.5484018921852112,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v02",
+      "split": "validation",
+      "category": "direct",
+      "query": "Kotlin Mutex 可以在同一个协程里重复加锁吗？",
+      "expectedSources": [
+        "Kotlin Mutex：协程互斥与共享状态保护"
+      ],
+      "elapsedMs": 36,
+      "candidates": [
+        {
+          "chunkId": "96c61d3a-8cd0-4132-9525-28b9fdf1ca31",
+          "source": "Kotlin Mutex：协程互斥与共享状态保护",
+          "score": 0.728220522403717,
+          "usable": true
+        },
+        {
+          "chunkId": "1fe6e102-bc73-467c-ad54-63e2c12208bd",
+          "source": "Kotlin 集合：只读接口不等于不可变对象",
+          "score": 0.5881558954715729,
+          "usable": true
+        },
+        {
+          "chunkId": "cdbe7202-80da-4cf8-8c47-4350d51f89d5",
+          "source": "PostgreSQL 行锁：SELECT FOR UPDATE 与死锁",
+          "score": 0.5524919033050537,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v03",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "想重新读 Kafka 的历史消息，只改成 earliest 就会从头读吗？",
+      "expectedSources": [
+        "Kafka auto.offset.reset：什么时候才生效"
+      ],
+      "elapsedMs": 46,
+      "candidates": [
+        {
+          "chunkId": "10f49059-20bd-4c90-afad-40f89687340d",
+          "source": "Kafka read_committed：事务消息可见性",
+          "score": 0.5209342241287231,
+          "usable": true
+        },
+        {
+          "chunkId": "035b0fe5-8f72-4263-8a67-5b1652c9c37c",
+          "source": "Kafka auto.offset.reset：什么时候才生效",
+          "score": 0.5173113942146301,
+          "usable": true
+        },
+        {
+          "chunkId": "9ea6b652-e6f6-428c-8b68-6919686b4a23",
+          "source": "Redis 缓存一致性：Cache-Aside 的并发窗口",
+          "score": 0.5032005906105042,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v04",
+      "split": "validation",
+      "category": "direct",
+      "query": "Kafka compact 主题的 tombstone 是空字符串还是 null？",
+      "expectedSources": [
+        "Kafka Tombstone：压缩主题中的删除标记"
+      ],
+      "elapsedMs": 39,
+      "candidates": [
+        {
+          "chunkId": "b4ee93f5-d712-4051-9e5d-994bfb4405ab",
+          "source": "Kafka Tombstone：压缩主题中的删除标记",
+          "score": 0.6987744867801666,
+          "usable": true
+        },
+        {
+          "chunkId": "e8271f65-3a4e-44e5-8318-deaba8b28381",
+          "source": "Kafka 日志保留：时间、容量与消费进度",
+          "score": 0.464008092880249,
+          "usable": true
+        },
+        {
+          "chunkId": "054b80c1-5146-4be2-854a-7a124c850609",
+          "source": "PostgreSQL NULL：三值逻辑与唯一约束",
+          "score": 0.46191519498825073,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v05",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "PostgreSQL 普通 VACUUM 之后，为什么磁盘文件没有明显缩小？",
+      "expectedSources": [
+        "PostgreSQL VACUUM：死元组与长事务"
+      ],
+      "elapsedMs": 44,
+      "candidates": [
+        {
+          "chunkId": "a0c64572-68df-42a6-87ae-a34156aa84da",
+          "source": "PostgreSQL VACUUM：死元组与长事务",
+          "score": 0.6646879613399506,
+          "usable": true
+        },
+        {
+          "chunkId": "b4ee93f5-d712-4051-9e5d-994bfb4405ab",
+          "source": "Kafka Tombstone：压缩主题中的删除标记",
+          "score": 0.5422985851764679,
+          "usable": true
+        },
+        {
+          "chunkId": "06b42985-ed59-479e-a31c-b416b6b9b5e3",
+          "source": "PostgreSQL MVCC：读已提交与可重复读",
+          "score": 0.5049590170383453,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v06",
+      "split": "validation",
+      "category": "direct",
+      "query": "PostgreSQL timestamptz 会保存用户原始的时区名称吗？",
+      "expectedSources": [
+        "PostgreSQL timestamptz：时间点与原始时区"
+      ],
+      "elapsedMs": 40,
+      "candidates": [
+        {
+          "chunkId": "1342116d-db64-498e-9a60-7f973891bd04",
+          "source": "PostgreSQL timestamptz：时间点与原始时区",
+          "score": 0.6527343094348907,
+          "usable": true
+        },
+        {
+          "chunkId": "a0c64572-68df-42a6-87ae-a34156aa84da",
+          "source": "PostgreSQL VACUUM：死元组与长事务",
+          "score": 0.5148636102676392,
+          "usable": true
+        },
+        {
+          "chunkId": "b4ee93f5-d712-4051-9e5d-994bfb4405ab",
+          "source": "Kafka Tombstone：压缩主题中的删除标记",
+          "score": 0.4951828718185425,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v07",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "Spring 一个方法直接调用同类另一个事务方法，为什么注解的事务属性可能没生效？",
+      "expectedSources": [
+        "Spring 事务：@Transactional 与同类方法调用"
+      ],
+      "elapsedMs": 48,
+      "candidates": [
+        {
+          "chunkId": "f463ad9f-5107-46ab-bf03-c445176c207a",
+          "source": "Spring 事务：@Transactional 与同类方法调用",
+          "score": 0.68767249584198,
+          "usable": true
+        },
+        {
+          "chunkId": "5b9d9802-4047-4cd1-868e-1f639016b2b8",
+          "source": "Spring Bean：单例作用域与线程安全",
+          "score": 0.6384669542312622,
+          "usable": true
+        },
+        {
+          "chunkId": "d6cdb53f-be58-42f4-84f3-cae9f8de47f7",
+          "source": "Spring 事务传播：REQUIRED、REQUIRES_NEW 与 NESTED",
+          "score": 0.6326786577701569,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v08",
+      "split": "validation",
+      "category": "direct",
+      "query": "Spring @Async 会把调用线程的事务自动带到新线程吗？",
+      "expectedSources": [
+        "Spring Async：异步执行不自动继承事务"
+      ],
+      "elapsedMs": 47,
+      "candidates": [
+        {
+          "chunkId": "d1d7bdb0-ba5e-4251-865c-150b063b5dd5",
+          "source": "Spring Async：异步执行不自动继承事务",
+          "score": 0.6676605641841888,
+          "usable": true
+        },
+        {
+          "chunkId": "f463ad9f-5107-46ab-bf03-c445176c207a",
+          "source": "Spring 事务：@Transactional 与同类方法调用",
+          "score": 0.6547239422798157,
+          "usable": true
+        },
+        {
+          "chunkId": "5b9d9802-4047-4cd1-868e-1f639016b2b8",
+          "source": "Spring Bean：单例作用域与线程安全",
+          "score": 0.6124114394187927,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v09",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "Redis 的键还没到过期时间就消失了，可能是什么原因？",
+      "expectedSources": [
+        "Redis 过期与淘汰：TTL 不等于容量策略"
+      ],
+      "elapsedMs": 40,
+      "candidates": [
+        {
+          "chunkId": "15b67ff9-09a6-4863-9a97-7982a9fff335",
+          "source": "Redis 过期与淘汰：TTL 不等于容量策略",
+          "score": 0.6595940589904785,
+          "usable": true
+        },
+        {
+          "chunkId": "c0fee998-acb1-47de-aaef-75ae3a29ebe0",
+          "source": "Redis 分布式锁：租约、释放校验与 Fencing Token",
+          "score": 0.6584646999835968,
+          "usable": true
+        },
+        {
+          "chunkId": "6ab26114-f3ee-488d-8b35-5217402440bd",
+          "source": "Redis 数据结构：按访问模式选择类型",
+          "score": 0.5322335362434387,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v10",
+      "split": "validation",
+      "category": "direct",
+      "query": "Redis 锁过期后旧持有者还在写数据，fencing token 怎么提供保护？",
+      "expectedSources": [
+        "Redis 分布式锁：租约、释放校验与 Fencing Token"
+      ],
+      "elapsedMs": 54,
+      "candidates": [
+        {
+          "chunkId": "c0fee998-acb1-47de-aaef-75ae3a29ebe0",
+          "source": "Redis 分布式锁：租约、释放校验与 Fencing Token",
+          "score": 0.7415499687194824,
+          "usable": true
+        },
+        {
+          "chunkId": "15b67ff9-09a6-4863-9a97-7982a9fff335",
+          "source": "Redis 过期与淘汰：TTL 不等于容量策略",
+          "score": 0.6059331893920898,
+          "usable": true
+        },
+        {
+          "chunkId": "96c61d3a-8cd0-4132-9525-28b9fdf1ca31",
+          "source": "Kotlin Mutex：协程互斥与共享状态保护",
+          "score": 0.5917562544345856,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v11",
+      "split": "validation",
+      "category": "direct",
+      "query": "HTTP 的 If-Match 如何防止覆盖别人已经修改的资源？",
+      "expectedSources": [
+        "HTTP ETag：条件请求与并发修改保护"
+      ],
+      "elapsedMs": 39,
+      "candidates": [
+        {
+          "chunkId": "81d9976e-ac68-485a-8cf6-44b02e1d26d2",
+          "source": "HTTP ETag：条件请求与并发修改保护",
+          "score": 0.5833339095115662,
+          "usable": true
+        },
+        {
+          "chunkId": "3a178168-5137-4ee6-a1bb-a0bedcdbbb25",
+          "source": "PostgreSQL UPSERT：唯一约束与并发插入",
+          "score": 0.5378831923007965,
+          "usable": true
+        },
+        {
+          "chunkId": "5a0aa7ec-6f81-4aab-86ae-4b299ceb0bd5",
+          "source": "HTTP 连接复用：连接池、响应体与协议差异",
+          "score": 0.531095415353775,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v12",
+      "split": "validation",
+      "category": "paraphrase",
+      "query": "线程池用了无界队列，为什么调大最大线程数仍然没多开线程？",
+      "expectedSources": [
+        "Java 线程池：有界队列与拒绝策略"
+      ],
+      "elapsedMs": 50,
+      "candidates": [
+        {
+          "chunkId": "eaa1fbe2-ad3b-4806-86af-64bfaaedeb2a",
+          "source": "Java 线程池：有界队列与拒绝策略",
+          "score": 0.6936210989952087,
+          "usable": true
+        },
+        {
+          "chunkId": "d0fcd174-0a54-412f-8a77-a6dc84fdfce1",
+          "source": "Spring JDBC：连接池大小与连接占用时间",
+          "score": 0.5575506687164307,
+          "usable": true
+        },
+        {
+          "chunkId": "9121a1b3-549a-457a-b548-1fbf511b6990",
+          "source": "JVM 内存：堆、元空间与直接内存",
+          "score": 0.5409059822559357,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v13",
+      "split": "validation",
+      "category": "multi_source",
+      "query": "PostgreSQL 的 JSONB 查询与数组包含查询为什么会考虑 GIN，它能直接替代 B-tree 排序吗？",
+      "expectedSources": [
+        "PostgreSQL JSONB：灵活字段与索引选择",
+        "PostgreSQL GIN：多值索引的适用场景"
+      ],
+      "elapsedMs": 62,
+      "candidates": [
+        {
+          "chunkId": "1112e7e5-477b-4be5-9c38-b6a4c2eb5fd6",
+          "source": "PostgreSQL GIN：多值索引的适用场景",
+          "score": 0.7650924474000931,
+          "usable": true
+        },
+        {
+          "chunkId": "6cd32d2c-3e57-4c39-8b42-8e4df8bcabd2",
+          "source": "PostgreSQL INCLUDE：覆盖索引与可见性检查",
+          "score": 0.6780073940753937,
+          "usable": true
+        },
+        {
+          "chunkId": "f6a83756-288a-4de9-a66b-42b7db668c80",
+          "source": "PostgreSQL 联合索引：最左列不是绝对限制",
+          "score": 0.647787868976593,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v14",
+      "split": "validation",
+      "category": "multi_source",
+      "query": "Kotlin 的 launch 和 async 返回值有什么区别，普通作用域里一个子协程失败会不会影响其他子协程？",
+      "expectedSources": [
+        "Kotlin 协程：launch 与 async 的区别",
+        "Kotlin 协程：结构化并发与异常传播"
+      ],
+      "elapsedMs": 59,
+      "candidates": [
+        {
+          "chunkId": "afe649f9-80a5-4571-a777-06fc39ad91e0",
+          "source": "Kotlin 协程：launch 与 async 的区别",
+          "score": 0.7431142032146454,
+          "usable": true
+        },
+        {
+          "chunkId": "d1d7bdb0-ba5e-4251-865c-150b063b5dd5",
+          "source": "Spring Async：异步执行不自动继承事务",
+          "score": 0.6089714169502258,
+          "usable": true
+        },
+        {
+          "chunkId": "baf7d072-9847-4519-82df-16cc0d74b6b2",
+          "source": "Kotlin 协程：结构化并发与异常传播",
+          "score": 0.6038689315319061,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v15",
+      "split": "validation",
+      "category": "near_missing",
+      "query": "Redis 7.2 默认的 maxmemory-policy 配置具体是什么？",
+      "expectedSources": [],
+      "elapsedMs": 39,
+      "candidates": [
+        {
+          "chunkId": "15b67ff9-09a6-4863-9a97-7982a9fff335",
+          "source": "Redis 过期与淘汰：TTL 不等于容量策略",
+          "score": 0.5918965339660645,
+          "usable": true
+        },
+        {
+          "chunkId": "6ab26114-f3ee-488d-8b35-5217402440bd",
+          "source": "Redis 数据结构：按访问模式选择类型",
+          "score": 0.5525398850440979,
+          "usable": true
+        },
+        {
+          "chunkId": "83813b0f-74dd-4623-b94f-df5b8a0cb14c",
+          "source": "Redis Cluster：哈希槽与多键操作",
+          "score": 0.534615159034729,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v16",
+      "split": "validation",
+      "category": "near_missing",
+      "query": "JDK 25 的 G1 默认 MaxGCPauseMillis 数值是多少？",
+      "expectedSources": [],
+      "elapsedMs": 45,
+      "candidates": [
+        {
+          "chunkId": "a0a56b26-316f-44ef-9b90-f58da2893460",
+          "source": "JVM GC：暂停时间与吞吐量的权衡",
+          "score": 0.4525555968284607,
+          "usable": true
+        },
+        {
+          "chunkId": "b836d88e-560b-4225-b262-23987e863fa5",
+          "source": "Kafka 消费者再均衡：触发原因与处理风险",
+          "score": 0.43723201751708984,
+          "usable": true
+        },
+        {
+          "chunkId": "cd1b2ef3-052c-4ad1-b57a-272d9e62c182",
+          "source": "Kotlin Dispatchers.IO：阻塞任务与取消限制",
+          "score": 0.43274712562561035,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v17",
+      "split": "validation",
+      "category": "near_missing",
+      "query": "本项目线上 Hikari 连接池的实际最大连接数是多少？",
+      "expectedSources": [],
+      "elapsedMs": 37,
+      "candidates": [
+        {
+          "chunkId": "d0fcd174-0a54-412f-8a77-a6dc84fdfce1",
+          "source": "Spring JDBC：连接池大小与连接占用时间",
+          "score": 0.5042470693588257,
+          "usable": true
+        },
+        {
+          "chunkId": "5a0aa7ec-6f81-4aab-86ae-4b299ceb0bd5",
+          "source": "HTTP 连接复用：连接池、响应体与协议差异",
+          "score": 0.4698827862739563,
+          "usable": true
+        },
+        {
+          "chunkId": "83813b0f-74dd-4623-b94f-df5b8a0cb14c",
+          "source": "Redis Cluster：哈希槽与多键操作",
+          "score": 0.4555620551109314,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v18",
+      "split": "validation",
+      "category": "unrelated",
+      "query": "贝多芬第九交响曲首演是哪一年？",
+      "expectedSources": [],
+      "elapsedMs": 36,
+      "candidates": [
+        {
+          "chunkId": "afe649f9-80a5-4571-a777-06fc39ad91e0",
+          "source": "Kotlin 协程：launch 与 async 的区别",
+          "score": 0.2305043339729309,
+          "usable": true
+        },
+        {
+          "chunkId": "a98a2777-3444-4a76-912c-6d3899b01fb8",
+          "source": "Kotlin Flow：冷流、StateFlow 与 SharedFlow",
+          "score": 0.22669440507888794,
+          "usable": true
+        },
+        {
+          "chunkId": "035b0fe5-8f72-4263-8a67-5b1652c9c37c",
+          "source": "Kafka auto.offset.reset：什么时候才生效",
+          "score": 0.21886032819747925,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v19",
+      "split": "validation",
+      "category": "unrelated",
+      "query": "三角形的内切圆半径如何根据边长计算？",
+      "expectedSources": [],
+      "elapsedMs": 36,
+      "candidates": [
+        {
+          "chunkId": "654b3f79-a866-4192-8f67-5ef007c482dd",
+          "source": "Kotlin inline 与 reified：内联和具体化类型参数",
+          "score": 0.4086698889732361,
+          "usable": true
+        },
+        {
+          "chunkId": "83813b0f-74dd-4623-b94f-df5b8a0cb14c",
+          "source": "Redis Cluster：哈希槽与多键操作",
+          "score": 0.3584497570991516,
+          "usable": true
+        },
+        {
+          "chunkId": "6a949343-ffee-4366-b562-dd088974a6ae",
+          "source": "Kafka 消费者组：分区数量决定消费并行度",
+          "score": 0.3457086682319641,
+          "usable": true
+        }
+      ]
+    },
+    {
+      "id": "v20",
+      "split": "validation",
+      "category": "unrelated",
+      "query": "从成都去九寨沟旅游三天应该如何安排行程？",
+      "expectedSources": [],
+      "elapsedMs": 33,
+      "candidates": [
+        {
+          "chunkId": "7ee5fa83-79b1-4907-bccc-e08d73c9504c",
+          "source": "Redis Pipeline：减少往返但不提供事务隔离",
+          "score": 0.3563540577888489,
+          "usable": true
+        },
+        {
+          "chunkId": "e8271f65-3a4e-44e5-8318-deaba8b28381",
+          "source": "Kafka 日志保留：时间、容量与消费进度",
+          "score": 0.3336770534515381,
+          "usable": true
+        },
+        {
+          "chunkId": "9ea6b652-e6f6-428c-8b68-6919686b4a23",
+          "source": "Redis 缓存一致性：Cache-Aside 的并发窗口",
+          "score": 0.33195769786834717,
+          "usable": true
+        }
+      ]
+    }
+  ]
+}
