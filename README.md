@@ -160,11 +160,14 @@ See the startup command reference above for terminal and IDE instructions.
 The application calls DeepSeek directly; no Docker or database is required.
 
 Open `http://localhost:8080/` for the chat UI. Enter sends a message; Shift+Enter
-adds a newline. Failed requests can be retried. The page keeps messages only
+adds a newline. Replies arrive incrementally; “停止生成” cancels the current request.
+Interrupted replies retain their partial text and are explicitly marked incomplete.
+“重新生成” starts a new request with the original question and mode, not a continuation.
+The page keeps messages only
 until refresh and sends only the current message to DeepSeek, not the history.
 The API key stays on the server and must not be placed in frontend files.
-The sidebar defaults to “DS 正常对话” (`/api/chat`). “RAG 对话” calls
-`/api/rag/chat` with `topK: 3`, requires the `vectors` profile, and displays
+The sidebar defaults to “DS 正常对话” (`/api/chat/stream`). “RAG 对话” calls
+`/api/rag/chat/stream` with `topK: 3`, requires the `vectors` profile, and displays
 threshold-filtered sources and retrieval diagnostics below the answer. Each message is labeled with its mode;
 retries use the original mode even after switching. Both modes are single-turn.
 The two chat views keep separate message lists and input drafts in the page;
@@ -188,6 +191,61 @@ curl http://localhost:8080/api/chat \
 The response is `{"reply":"..."}`. Each request is an independent conversation
 (no history or document retrieval). Blank messages return HTTP 400.
 Provider errors propagate; an empty model reply returns HTTP 502.
+
+### 流式聊天（SSE）
+
+页面默认通过 `fetch` 发送 POST 并持续读取 SSE 响应，不是收到完整答案后模拟打字。
+普通聊天和 RAG 分别使用下面的接口，原有 `/api/chat`、`/api/rag/chat`
+完整 JSON 接口保留，调用方可以继续使用。
+
+```bash
+curl -N http://localhost:8080/api/chat/stream \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: text/event-stream' \
+  -d '{"message":"解释一下 Kotlin 的空安全"}'
+
+curl -N http://localhost:8080/api/rag/chat/stream \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: text/event-stream' \
+  -d '{"question":"Kafka只有6个分区，启动8个消费者能加速吗？","topK":3}'
+```
+
+请求字段与对应 JSON 接口相同，RAG 同样支持 `similarityThreshold`。
+响应类型为 `text/event-stream`，每个事件的 `data` 都是 JSON 对象：
+
+| 事件 | 数据 | 含义 |
+| --- | --- | --- |
+| `status` | `{"stage":"retrieving"}` 或 `{"stage":"generating"}` | 当前处理阶段 |
+| `sources` | `{"sources":[...],"diagnostics":{...}}` | RAG 检索结果，正文之前发送 |
+| `delta` | `{"text":"一段增量文字"}` | 追加到同一个回答气泡 |
+| `done` | `{"modelCalled":true}` | 本次回答完整结束；无资料拒答为 `false` |
+| `error` | `{"code":"...","message":"..."}` | 本次失败，不再发送成功的 `done` |
+
+例如，正文中的换行会编码在 JSON 字符串内，不会被误当作 SSE 事件边界。
+客户端必须处理网络分片和 UTF-8 多字节字符，不能假定一次网络读取就是一个完整事件。
+只有收到有效的 `done` 才能标记完成，连接关闭本身不代表回答完整。
+后端每 5 秒发送 `:keep-alive` 注释心跳，客户端忽略其内容；
+检测到写入失败时取消上游连接。总处理期限为 120 秒，包含 RAG 检索，
+浏览器等待上限为 125 秒，以留出接收服务端超时事件的时间。
+错误代码包括 `timeout`、`incomplete_response`、`empty_response` 和 `stream_failed`。
+模型响应必须正常以 `stop` 结束且含有非空白正文；达到长度限制或异常中断不会被标记成功。
+
+RAG 仍先完成检索和阈值过滤，再调用 DeepSeek 流式生成。
+没有合格资料时发送来源/诊断、资料不足的提示和 `done(false)`，不调用 DeepSeek。
+来源提前展示时，页面显示“生成尚未完成”，不会提前宣称模型已完成调用。
+普通聊天不访问知识库，两个模式都不发送历史聊天记录。
+
+点击停止会取消浏览器请求并触发后端取消上游订阅；网络断开被服务端检测到后同样清理。
+这不保证提供方已产生的工作或费用可以撤销。
+超时、模型中途失败、异常结束及未收到完成事件的断流，都保留部分文字并标记未完成，
+不自动重试、不静默退回完整响应接口。重试会新增回答，保留原来的不完整记录。
+参数错误仍使用 HTTP 错误；SSE 已开始后发生的故障通过 `error` 事件告知，
+不能只检查最初的 HTTP 200。
+
+如果前面部署反向代理，需要关闭该路径的响应缓冲，并合理设置读超时，否则可能
+仍然看到整段内容最后一起出现。`curl -N` 用于关闭 curl 自身的输出缓冲。
+前端流式解析和交互用例可运行 `node --test src/test/javascript/chat-stream.test.cjs`；
+后端用例沿用 `./gradlew test --tests 'org.walnut.playground.springai.*'`。
 
 ## PostgreSQL + pgvector (optional)
 

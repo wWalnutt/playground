@@ -103,6 +103,8 @@ class KnowledgeService(
     fun searchWithDiagnostics(request: KnowledgeSearchRequest): KnowledgeSearchResponse =
         retrievalService.retrieve(request)
 
+    fun validateSearch(request: KnowledgeSearchRequest) = retrievalService.validate(request)
+
     private fun validateText(text: String, maxLength: Int) {
         if (text.isBlank() || text.length > maxLength) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "text must contain 1 to $maxLength characters")

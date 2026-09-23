@@ -50,6 +50,7 @@ class SpringAiApplicationTests {
         HttpClient.newHttpClient().use { client ->
             listOf(
                 "/" to "id=\"chat-form\"",
+                "/" to "id=\"stop-button\"",
                 "/" to "data-view=\"chat\"",
                 "/" to "data-view=\"rag\"",
                 "/" to "data-view=\"upload\"",
@@ -62,7 +63,8 @@ class SpringAiApplicationTests {
                 "/" to "id=\"document-list\"",
                 "/" to "id=\"document-detail\"",
                 "/" to "id=\"documents-refresh\"",
-                "/chat.js" to "\"/api/rag/chat\" : \"/api/chat\"",
+                "/chat.js" to "/api/rag/chat/stream",
+                "/chat.js" to "/api/chat/stream",
                 "/chat.js" to "/api/knowledge/documents/upload",
                 "/chat.js" to "retrieval-diagnostics",
                 "/chat.js" to "data.modelCalled",
@@ -97,6 +99,21 @@ class SpringAiApplicationTests {
     @Test
     fun surfacesEmptyProviderReply() {
         assertEquals(502, post("""{"message":"empty-reply"}""").statusCode())
+    }
+
+    @Test
+    fun ragStreamingIsUnavailableWithoutVectorsProfile() {
+        val port = context.environment.getRequiredProperty("local.server.port")
+        HttpClient.newHttpClient().use { client ->
+            val response = client.send(
+                HttpRequest.newBuilder(URI("http://localhost:$port/api/rag/chat/stream"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString("""{"question":"question"}"""))
+                    .build(),
+                HttpResponse.BodyHandlers.ofString(),
+            )
+            assertEquals(404, response.statusCode())
+        }
     }
 
     private fun post(json: String): HttpResponse<String> {

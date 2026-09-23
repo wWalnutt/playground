@@ -7,6 +7,7 @@ const messageLists = {
   rag: document.querySelector("#rag-messages"),
 };
 const sendButton = document.querySelector("#send-button");
+const stopButton = document.querySelector("#stop-button");
 const status = document.querySelector("#request-status");
 const navigation = document.querySelectorAll("[data-view]");
 const viewTitle = document.querySelector("#view-title");
@@ -41,6 +42,7 @@ const uploadTypes = { TEXT: "直接输入", FILE: "文件上传", LEGACY: "历�
 const drafts = { chat: "", rag: "" };
 let activeView = "chat";
 let sending = false;
+let activeChatRequest = null;
 let uploading = "";
 let managing = false;
 let documentsPage = 0;
@@ -49,7 +51,9 @@ let documentsTotalPages = 0;
 function updateControls() {
   const busy = sending || uploading !== "" || managing;
   sendButton.disabled = busy || activeView === "upload" || !input.value.trim();
-  sendButton.textContent = sending ? "等待回复…" : "发送";
+  sendButton.textContent = sending ? "接收中…" : "发送";
+  stopButton.hidden = !sending;
+  stopButton.disabled = !activeChatRequest || activeChatRequest.controller.signal.aborted;
   navigation.forEach((button) => { button.disabled = busy; });
   fileInput.disabled = busy;
   uploadButton.disabled = busy || !fileInput.files.length;
@@ -144,7 +148,7 @@ function renderSources(body, sources) {
   summary.textContent = `查看检索来源（${sources.length}）`;
   const note = document.createElement("p");
   note.className = "sources-note";
-  note.textContent = "以下资料已提供给模型，不代表回答中的每个结论都已核实。";
+  note.textContent = "以下是本次检索选中的参考资料，不代表回答中的每个结论都已核实。";
   details.append(summary, note);
   sources.forEach((source) => {
     const item = document.createElement("section");
@@ -169,7 +173,7 @@ function renderSources(body, sources) {
   body.append(details);
 }
 
-function validRetrievalDiagnostics(data) {
+function validRetrievalDiagnostics(data, requireModelCalled = true) {
   const diagnostic = data.diagnostics;
   const reasons = ["ACCEPTED", "BELOW_THRESHOLD", "EMPTY_TEXT"];
   return diagnostic &&
@@ -180,7 +184,7 @@ function validRetrievalDiagnostics(data) {
     Number.isInteger(diagnostic.rejectedCount) && diagnostic.rejectedCount >= 0 &&
     diagnostic.acceptedCount + diagnostic.rejectedCount === diagnostic.candidateCount &&
     Number.isSafeInteger(diagnostic.elapsedMs) && diagnostic.elapsedMs >= 0 &&
-    typeof data.modelCalled === "boolean" && data.modelCalled === (data.sources.length > 0) &&
+    (!requireModelCalled || (typeof data.modelCalled === "boolean" && data.modelCalled === (data.sources.length > 0))) &&
     Array.isArray(diagnostic.candidates) && diagnostic.candidates.length === diagnostic.candidateCount &&
     diagnostic.candidates.every((candidate) =>
       candidate && typeof candidate.chunkId === "string" &&
@@ -196,7 +200,8 @@ function renderRetrievalDiagnostics(body, diagnostic, modelCalled) {
   const details = document.createElement("details");
   details.className = "sources retrieval-diagnostics";
   const summary = document.createElement("summary");
-  summary.textContent = `检索诊断 · 保留 ${diagnostic.acceptedCount}/${diagnostic.candidateCount} 条 · ${modelCalled ? "已调用 DeepSeek" : "未调用 DeepSeek"}`;
+  const modelStatus = modelCalled === null ? "生成尚未完成" : modelCalled ? "已调用 DeepSeek" : "未调用 DeepSeek";
+  summary.textContent = `检索诊断 · 保留 ${diagnostic.acceptedCount}/${diagnostic.candidateCount} 条 · ${modelStatus}`;
   const overview = document.createElement("p");
   overview.className = "source-meta";
   overview.textContent = `候选上限 ${diagnostic.topK} · 相似度阈值 ≥ ${diagnostic.similarityThreshold} · 过滤 ${diagnostic.rejectedCount} 条 · 检索耗时 ${diagnostic.elapsedMs} ms`;
@@ -219,13 +224,78 @@ function renderRetrievalDiagnostics(body, diagnostic, modelCalled) {
     details.append(empty);
   }
   body.append(details);
+  return { details, summary };
+}
+
+async function readEventStream(response, onEvent) {
+  if (!response.headers.get("Content-Type")?.toLowerCase().startsWith("text/event-stream") || !response.body) {
+    throw new Error("服务未返回有效的事件流，请确认后端已更新并重启。");
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  let buffer = "";
+  let eventName = "";
+  let data = [];
+  let frameSize = 0;
+  let reachedEof = false;
+  function line(value) {
+    if (value === "") {
+      const name = eventName || "message";
+      const payload = data.join("\n");
+      const dispatch = data.length > 0;
+      eventName = "";
+      data = [];
+      frameSize = 0;
+      return dispatch ? onEvent(name, JSON.parse(payload)) : false;
+    }
+    frameSize += value.length;
+    if (frameSize > 1048576) throw new Error("流式事件过大，已停止接收。");
+    if (value.startsWith(":")) return false;
+    const separator = value.indexOf(":");
+    const field = separator < 0 ? value : value.slice(0, separator);
+    let content = separator < 0 ? "" : value.slice(separator + 1);
+    if (content.startsWith(" ")) content = content.slice(1);
+    if (field === "event") eventName = content;
+    if (field === "data") data.push(content);
+    return false;
+  }
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      reachedEof = done;
+      buffer += done ? decoder.decode() : decoder.decode(value, { stream: true });
+      let offset = 0;
+      for (let i = 0; i < buffer.length; i++) {
+        const character = buffer[i];
+        if (character !== "\r" && character !== "\n") continue;
+        if (character === "\r" && i + 1 === buffer.length && !done) break;
+        if (line(buffer.slice(offset, i))) return;
+        if (character === "\r" && buffer[i + 1] === "\n") i++;
+        offset = i + 1;
+      }
+      buffer = buffer.slice(offset);
+      if (buffer.length + frameSize > 1048576) throw new Error("流式事件过大，已停止接收。");
+      // An unterminated frame at EOF is not a completed SSE event.
+      if (done) return;
+    }
+  } finally {
+    try {
+      if (!reachedEof) await reader.cancel();
+    } catch (error) {
+      console.warn("关闭流式响应失败", error);
+    } finally {
+      reader.releaseLock();
+    }
+  }
 }
 
 async function send(message, mode, failedRow) {
   if (sending || uploading || managing) return;
   sending = true;
+  const request = { controller: new AbortController(), stopped: false };
+  activeChatRequest = request;
   if (failedRow) {
-    failedRow.remove();
+    failedRow.querySelectorAll(".retry-button").forEach((button) => button.remove());
   } else {
     appendMessage("user", message, mode);
     input.value = "";
@@ -236,12 +306,18 @@ async function send(message, mode, failedRow) {
   status.textContent = mode === "rag" ? "正在检索资料并等待回答" : "正在等待 DeepSeek 回复";
   updateControls();
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000);
+  const { controller } = request;
+  const timeout = setTimeout(() => controller.abort(), 125000);
+  const answerText = document.createTextNode("");
+  let receivedText = false;
+  let nonblankText = false;
+  let completed = false;
+  let retrieval = null;
+  let diagnosticView = null;
   try {
-    const response = await fetch(mode === "rag" ? "/api/rag/chat" : "/api/chat", {
+    const response = await fetch(mode === "rag" ? "/api/rag/chat/stream" : "/api/chat/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", Accept: "text/event-stream" },
       body: JSON.stringify(mode === "rag" ? { question: message, topK: 3 } : { message }),
       signal: controller.signal,
     });
@@ -251,51 +327,110 @@ async function send(message, mode, failedRow) {
       }
       throw new Error(`请求失败（HTTP ${response.status}），请检查服务配置后重试。`);
     }
-    const data = await response.json();
-    const reply = mode === "rag" ? data?.answer : data?.reply;
-    if (typeof reply !== "string" || !reply.trim()) {
-      throw new Error("服务没有返回有效回复，请重试。");
-    }
-    if (mode === "rag" && (!Array.isArray(data.sources) || !data.sources.every((source) =>
-      source && Number.isInteger(source.reference) && source.reference > 0 &&
-      typeof source.chunkId === "string" && typeof source.text === "string"))) {
-      throw new Error("服务返回的引用来源格式不正确，请重试。");
-    }
-    if (mode === "rag" && !validRetrievalDiagnostics(data)) {
-      throw new Error("检索诊断格式异常，请确认后端已更新并重启，不要将此结果当作有效回答。");
-    }
-    pending.bubble.textContent = reply;
-    if (mode === "rag") {
-      renderRetrievalDiagnostics(pending.body, data.diagnostics, data.modelCalled);
-      renderSources(pending.body, data.sources);
-    }
-    status.textContent = "回复已收到";
+    await readEventStream(response, (event, data) => {
+      if (controller.signal.aborted) throw new Error("请求已停止。");
+      if (event === "error") {
+        if (typeof data?.code !== "string" || typeof data.message !== "string" || !data.message.trim()) {
+          throw new Error("服务返回了无效的流式错误信息。");
+        }
+        const errors = {
+          timeout: "请求处理超时，回答未完成。",
+          incomplete_response: "模型未正常结束生成，回答未完成。",
+          empty_response: "模型没有返回有效回答。",
+          stream_failed: "无法完成回答，请检查后端日志后重试。",
+        };
+        throw new Error(Object.hasOwn(errors, data.code) ? errors[data.code] : data.message);
+      }
+      if (event === "status") {
+        if (!data || !["retrieving", "generating"].includes(data.stage)) throw new Error("流式状态格式异常。");
+        if (!receivedText) status.textContent = data.stage === "retrieving" ? "正在检索资料" : "正在等待首段回答";
+      } else if (event === "sources") {
+        if (mode !== "rag" || retrieval || receivedText || !Array.isArray(data?.sources) ||
+            !data.sources.every((source) => source && Number.isInteger(source.reference) && source.reference > 0 &&
+              typeof source.chunkId === "string" && typeof source.text === "string") ||
+            !validRetrievalDiagnostics(data, false)) {
+          throw new Error("检索来源或诊断格式异常，已停止接收。");
+        }
+        retrieval = data;
+        diagnosticView = renderRetrievalDiagnostics(pending.body, data.diagnostics, data.sources.length ? null : false);
+        renderSources(pending.body, data.sources);
+        scrollToLatest(mode);
+      } else if (event === "delta") {
+        if (typeof data?.text !== "string" || (mode === "rag" && !retrieval)) {
+          throw new Error("流式文本格式或事件顺序异常。");
+        }
+        if (data.text.length) {
+          if (!receivedText) pending.bubble.replaceChildren(answerText);
+          receivedText = true;
+          nonblankText ||= Boolean(data.text.trim());
+          answerText.appendData(data.text);
+          pending.row.classList.remove("pending");
+          pending.row.classList.add("streaming");
+          status.textContent = "正在接收回答…";
+          scrollToLatest(mode);
+        }
+      } else if (event === "done") {
+        if (!nonblankText || typeof data?.modelCalled !== "boolean" ||
+            (mode === "rag" ? !retrieval || data.modelCalled !== (retrieval.sources.length > 0) : !data.modelCalled)) {
+          throw new Error("服务没有返回有效的完整回答。");
+        }
+        completed = true;
+        if (diagnosticView) {
+          diagnosticView.summary.textContent = `检索诊断 · 保留 ${retrieval.diagnostics.acceptedCount}/${retrieval.diagnostics.candidateCount} 条 · ${data.modelCalled ? "已调用 DeepSeek" : "未调用 DeepSeek"}`;
+        }
+        return true;
+      } else {
+        throw new Error("收到未知的流式事件，已停止接收。");
+      }
+      return false;
+    });
+    if (!completed) throw new Error("连接在完成事件到达前结束，回答未完成。");
+    status.textContent = "回答已完成";
   } catch (error) {
-    pending.row.classList.add("failed");
-    if (controller.signal.aborted) {
-      pending.bubble.textContent = "等待回复超时，请稍后重试。";
+    let errorMessage;
+    if (request.stopped) {
+      errorMessage = "已停止生成，回答未完成。";
+    } else if (controller.signal.aborted) {
+      errorMessage = "等待回答超时，回答未完成。";
     } else if (error instanceof TypeError) {
-      pending.bubble.textContent = "无法连接聊天服务，请确认应用已启动，并检查网络。";
+      errorMessage = "连接中断或流式编码异常，回答未完成。请检查后端和网络。";
     } else if (error instanceof SyntaxError) {
-      pending.bubble.textContent = "服务返回的数据格式不正确，请重试。";
+      errorMessage = "服务返回的事件格式异常，回答未完成。";
     } else {
-      pending.bubble.textContent = error instanceof Error ? error.message : "发送失败，请重试。";
+      errorMessage = error instanceof Error ? error.message : "流式请求失败，回答未完成。";
     }
+    pending.row.classList.add(request.stopped ? "stopped" : "failed");
+    if (!receivedText) pending.bubble.textContent = "未收到回答内容。";
+    const note = document.createElement("p");
+    note.className = request.stopped ? "stream-note" : "stream-note error";
+    note.textContent = `${errorMessage}${receivedText ? " 上方保留的内容是不完整回答。" : ""}`;
+    pending.body.append(note);
     const retry = document.createElement("button");
     retry.type = "button";
     retry.className = "retry-button";
-    retry.textContent = "重新发送";
+    retry.textContent = "重新生成";
     retry.addEventListener("click", () => send(message, mode, pending.row));
-    pending.bubble.append(retry);
-    status.textContent = "发送失败";
+    pending.body.append(retry);
+    status.textContent = request.stopped ? "已停止生成" : "回答未完成";
   } finally {
     clearTimeout(timeout);
+    controller.abort();
+    activeChatRequest = null;
     sending = false;
     pending.row.classList.remove("pending");
+    pending.row.classList.remove("streaming");
     updateControls();
     scrollToLatest(mode);
   }
 }
+
+stopButton.addEventListener("click", () => {
+  if (!activeChatRequest || activeChatRequest.controller.signal.aborted) return;
+  activeChatRequest.stopped = true;
+  activeChatRequest.controller.abort();
+  status.textContent = "正在停止…";
+  updateControls();
+});
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();

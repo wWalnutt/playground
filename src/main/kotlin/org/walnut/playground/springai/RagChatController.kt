@@ -1,9 +1,12 @@
 package org.walnut.playground.springai
 
 import org.springframework.context.annotation.Profile
+import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
+import reactor.core.publisher.Flux
 
 data class RagChatRequest(val question: String, val topK: Int = 3, val similarityThreshold: Double? = null)
 data class RagChatResponse(
@@ -26,4 +29,8 @@ class RagChatController(private val ragChatService: RagChatService) {
     @PostMapping("/api/rag/chat")
     fun chat(@RequestBody request: RagChatRequest): RagChatResponse =
         ragChatService.chat(request)
+
+    @PostMapping("/api/rag/chat/stream", produces = [MediaType.TEXT_EVENT_STREAM_VALUE])
+    fun stream(@RequestBody request: RagChatRequest): ResponseEntity<Flux<ChatEvent>> =
+        ChatStreaming.response(ragChatService.stream(request))
 }

@@ -150,6 +150,9 @@ h1 { margin: 0; font-size: 20px; font-weight: 600; }
 .pending .bubble { color: #878d89; }
 .failed .bubble { color: #a6372d; background: #fff1ef; }
 .failed .bubble::before { border-right-color: #fff1ef; }
+.stream-note { margin: 8px 0 0; font-size: 12px; line-height: 1.6; color: #86611b; }
+.stream-note.error { color: #a6372d; }
+.streaming .bubble { border-bottom: 2px solid #84c49d; }
 .retry-button {
   display: block;
   margin-top: 10px;
@@ -190,6 +193,8 @@ textarea::placeholder { color: #a1a7a3; }
   cursor: pointer;
 }
 #send-button:hover:not(:disabled) { background: #079749; }
+#stop-button { margin-left: auto; padding: 8px 14px; border: 1px solid #dba59d; border-radius: 5px; color: #a6372d; background: #fff1ef; cursor: pointer; }
+#stop-button:not([hidden]) + #send-button { margin-left: 0; }
 button:disabled { opacity: .45; cursor: not-allowed; }
 button:focus-visible, input:focus-visible, summary:focus-visible, .messages:focus-visible { outline: 2px solid #168845; outline-offset: 3px; }
 @media (max-width: 720px) {

@@ -46,16 +46,8 @@ class KnowledgeRetrievalService(
     }
 
     fun retrieve(request: KnowledgeSearchRequest): KnowledgeSearchResponse {
-        if (request.query.isBlank() || request.query.length > 2000) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query must contain 1 to 2000 characters")
-        }
-        if (request.topK !in 1..20) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "topK must be between 1 and 20")
-        }
+        validate(request)
         val threshold = request.similarityThreshold ?: defaultSimilarityThreshold
-        if (!validThreshold(threshold)) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "similarityThreshold must be finite and between 0 and 1")
-        }
         val started = System.nanoTime()
         // Fetch the baseline topK pool once; thresholding never expands or reranks it.
         val documents = vectorStore.similaritySearch(
@@ -85,6 +77,19 @@ class KnowledgeRetrievalService(
                 (System.nanoTime() - started) / 1_000_000, candidates,
             ),
         )
+    }
+
+    fun validate(request: KnowledgeSearchRequest) {
+        if (request.query.isBlank() || request.query.length > 2000) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "query must contain 1 to 2000 characters")
+        }
+        if (request.topK !in 1..20) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "topK must be between 1 and 20")
+        }
+        val threshold = request.similarityThreshold ?: defaultSimilarityThreshold
+        if (!validThreshold(threshold)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "similarityThreshold must be finite and between 0 and 1")
+        }
     }
 
     private fun validThreshold(value: Double): Boolean = value.isFinite() && value in 0.0..1.0
